@@ -1,0 +1,66 @@
+PLANTILLA: INFORME DE LÍNEA BASE, IIC3694
+
+1. ALCANCE
+Esta plantilla organiza el cuarto entregable del PDF
+DesafioInvestigacion-2026.pdf (sección III, página 3):
+- Modelos considerados.
+- pass@1 y pass@k por nivel de dificultad.
+- Ejemplos cualitativos de fortalezas y debilidades.
+- Robustez del verificador.
+- Calibración de las tareas para el modelo objetivo.
+
+Los títulos de secciones, el formato de página, el índice y las
+tablas son decisiones de organización de esta plantilla. El PDF
+no establece un límite de páginas ni un formato tipográfico.
+Los nombres de niveles y las filas de modelos son orientativos.
+No se incluyen firmas ni evaluación de pares.
+
+El código del harness, su descripción completa y los datos SFT/DPO
+corresponden a los otros entregables. Aquí se resumen o referencian
+solo cuando ayuden a interpretar la evaluación.
+
+2. PERSONALIZACIÓN
+- Abrir datos.tex y completar NombreProyecto y FechaEntrega.
+- Revisar allí los integrantes y los datos académicos.
+- Reemplazar los campos [Completar] y [ ] de secciones/.
+- Ajustar filas, niveles y modelos a lo efectivamente evaluado.
+- Agregar las fuentes utilizadas a Bibliografia.bib.
+- Guardar figuras en figuras/ y el logo como LogoUC.jpg en la raíz.
+- Para ocultar las guías grises, cambiar \mostrarguiastrue por
+  \mostrarguiasfalse en preambulo.tex. Esto NO completa ni elimina
+  los campos pendientes.
+- Los anexos se activan cambiando \incluiranexosfalse por
+  \incluiranexostrue en preambulo.tex.
+
+El enunciado anuncia como fecha máxima el viernes 6 de noviembre
+a las 23:59. Para el segundo semestre de 2026 corresponde al
+6 de noviembre de 2026. La fecha efectiva de portada queda editable.
+
+3. COMPILACIÓN EN OVERLEAF
+Subir todos los archivos conservando la carpeta secciones/.
+Seleccionar informe.tex como documento principal y pdfLaTeX como
+compilador. La bibliografía utiliza BibTeX, no Biber.
+
+4. COMPILACIÓN LOCAL
+Desde la carpeta que contiene informe.tex, con una distribución
+LaTeX que incluya los paquetes usados y el idioma español:
+
+    latexmk -pdf -interaction=nonstopmode -halt-on-error informe.tex
+
+Alternativa si no se dispone de latexmk:
+
+    pdflatex informe.tex
+    bibtex informe
+    pdflatex informe.tex
+    pdflatex informe.tex
+
+El generador necesita solo Python; la compilación del PDF es un
+paso separado y requiere LaTeX. El logo ausente se representa
+mediante un recuadro para permitir compilar mientras se incorpora.
+
+5. VOLVER A EJECUTAR EL GENERADOR
+No sobrescribe los archivos de texto existentes por defecto.
+Para otra plantilla, elegir un nombre con --carpeta.
+--sobrescribir reemplaza los archivos generados, incluidos datos.tex
+y las secciones: usarlo solo si se desea reiniciar su contenido.
+Los archivos ajenos a la plantilla no se borran.

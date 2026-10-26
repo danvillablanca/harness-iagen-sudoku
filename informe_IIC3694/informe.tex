@@ -1,0 +1,33 @@
+% Archivo principal. Compilar con pdfLaTeX y BibTeX.
+\input{preambulo.tex}
+
+\begin{document}
+\pagenumbering{gobble}
+\portada
+
+\clearpage
+\pagenumbering{roman}
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+\input{secciones/1_contexto}
+\input{secciones/2_modelos_protocolo}
+\input{secciones/3_resultados}
+\input{secciones/4_analisis_cualitativo}
+\input{secciones/5_robustez_verificador}
+\input{secciones/6_calibracion_tareas}
+\input{secciones/7_conclusiones}
+
+\bibliographystyle{plainnat}
+\phantomsection
+\addcontentsline{toc}{section}{Referencias}
+\bibliography{Bibliografia}
+
+% Activar los anexos en preambulo.tex solo si se necesitan.
+\ifincluiranexos
+  \clearpage
+  \appendix
+  \input{secciones/8_anexos}
+\fi
+\end{document}

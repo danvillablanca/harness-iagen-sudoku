@@ -1,0 +1,75 @@
+\documentclass[letterpaper,11pt]{article}
+
+% Idioma, tipografía y página.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{%
+  \usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+}{%
+  % Alternativa de Babel para instalaciones sin spanish.ldf.
+  \usepackage{babel}
+  \babelprovide[import,main]{spanish}
+}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.5cm,headheight=14pt]{geometry}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+\setlength{\emergencystretch}{2em}
+
+% Figuras, ecuaciones y tablas.
+\usepackage{graphicx}
+\graphicspath{{./}{figuras/}}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{float}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\renewcommand{\arraystretch}{1.18}
+\setlist{nosep,topsep=0.4em}
+
+% Datos comunes y bibliografía. No requiere Biber.
+\input{datos.tex}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={\TituloInforme},
+  pdfauthor={\AutoresTexto},
+  pdfsubject={Desafío de Investigación, IIC3694}
+}
+\AtBeginDocument{%
+  \renewcommand{\refname}{Referencias}%
+  \renewcommand{\tablename}{Tabla}%
+}
+
+% Encabezado y pie de página.
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small \CodigoCurso\ -- Sección \SeccionCurso}
+\fancyhead[R]{\small Informe de línea base}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+% Ayudas de la plantilla: no son resultados del trabajo.
+% Cambiar a \mostrarguiasfalse para ocultar las guías grises.
+% Los campos [Completar] deben reemplazarse por contenido real.
+\newif\ifmostrarguias
+\mostrarguiastrue
+\newcommand{\guia}[1]{%
+  \ifmostrarguias
+    \par\begingroup\small\color{black!60}
+    \textbf{Guía de redacción.} #1\par\endgroup
+  \fi
+}
+\newcommand{\pendiente}[1]{\textit{[Completar: #1]}}
+\newcommand{\dato}{\textit{[Completar]}}
+\newcommand{\valor}{\textit{[\,]}}
+\newcommand{\passuno}{\texttt{pass@1}}
+\newcommand{\passk}{\texttt{pass@}\ensuremath{k}}
+
+% Los anexos son opcionales y están desactivados inicialmente.
+\newif\ifincluiranexos
+\incluiranexosfalse
+\input{0_portada.tex}

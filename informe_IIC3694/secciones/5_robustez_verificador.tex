@@ -1,0 +1,39 @@
+\section{Robustez del verificador}
+\label{sec:robustez}
+
+\pendiente{describir qué valida el verificador, cómo interpreta la
+respuesta y cómo implementa la interfaz
+\texttt{reward(prompt, completion) -> float}.}
+
+\subsection{Equivalencias y pruebas adversariales}
+\guia{Comprobar que se acepten respuestas correctas equivalentes y
+se rechacen respuestas incorrectas. El enunciado valora casos
+diseñados para engañar al verificador, incluyendo respuestas
+contradictorias, explotación del formato y errores del parser.
+La tabla propone categorías de prueba, no resultados ya obtenidos.}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Pruebas de robustez del verificador.}
+  \label{tab:robustez}
+  \begin{tabularx}{\linewidth}{@{}YYYY@{}}
+    \toprule
+    Caso probado & Comportamiento esperado & Resultado observado & Evidencia \\
+    \midrule
+    Respuesta correcta equivalente & Aceptar & \dato & \dato \\
+    Respuesta incorrecta & Rechazar & \dato & \dato \\
+    Respuestas contradictorias & Rechazar & \dato & \dato \\
+    Formato inválido o ambiguo & Definir política & \dato & \dato \\
+    Intento de engaño al parser & Rechazar el engaño & \dato & \dato \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Vulnerabilidades y limitaciones}
+\pendiente{reportar el número de casos evaluados, falsos positivos
+(respuestas incorrectas aceptadas), falsos negativos (respuestas
+correctas rechazadas), problemas encontrados y correcciones.}
+
+\guia{Distinguir los fallos del modelo de los del verificador.
+Si se modifica este último, indicar si se recalcularon las métricas
+afectadas. Declarar qué ataques o equivalencias aún no se han probado.}

@@ -1,0 +1,48 @@
+\section{Modelos y protocolo de evaluación}
+\label{sec:protocolo}
+
+\subsection{Modelos considerados}
+\guia{Incluir el modelo objetivo, del orden de 1 a 2 mil millones de
+parámetros según el enunciado, y los modelos usados para comparación.
+El curso pide modelos de frontera, privilegiando modelos abiertos.
+Añadir o quitar filas según los modelos efectivamente evaluados.}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Modelos utilizados en la línea base.}
+  \label{tab:modelos}
+  \begin{tabularx}{\linewidth}{@{}lYYY@{}}
+    \toprule
+    Rol & Modelo y variante & Parámetros & Versión o revisión \\
+    \midrule
+    Objetivo & \dato & \dato & \dato \\
+    Comparación 1 & \dato & \dato & \dato \\
+    Comparación 2 & \dato & \dato & \dato \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Configuración y reproducibilidad}
+\begin{description}[leftmargin=0pt]
+  \item[Prompt y herramientas:] \pendiente{plantilla de prompt,
+  formato de salida, herramientas permitidas y límite de turnos.}
+  \item[Inferencia:] \pendiente{temperatura, top-p, máximo de tokens,
+  semillas y cualquier configuración que varíe entre modelos.}
+  \item[Entorno de ejecución:] \pendiente{hardware, precisión o
+  cuantización, software y versiones relevantes.}
+  \item[Verificación:] \pendiente{versión del verificador, criterio
+  binario de éxito y tratamiento de errores, salidas inválidas y
+  tiempos de espera.}
+\end{description}
+
+\subsection{Métricas y muestreo}
+\pendiente{definir cómo se calculan \passuno\ y \passk, el valor o
+valores de $k$, el número de problemas por nivel y el número de
+respuestas muestreadas por problema.}
+
+\guia{Explicitar el estimador utilizado y citar su fuente si
+corresponde. Distinguir el número total de muestras $n$ del valor
+$k$; debe haber suficientes muestras para estimar la métrica elegida.
+Reportar siempre la misma escala, proporción o porcentaje, e indicar
+cómo se agregan los resultados. El enunciado no fija un valor de $k$.
+Una recompensa parcial no equivale automáticamente a un acierto.}

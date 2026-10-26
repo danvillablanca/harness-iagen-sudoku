@@ -1,0 +1,49 @@
+\newcommand{\portada}{%
+  \begin{titlepage}
+    \thispagestyle{empty}
+    \noindent
+    \begin{minipage}[t]{0.13\textwidth}
+      \vspace{0pt}
+      \IfFileExists{LogoUC.jpg}{%
+        \includegraphics[width=\linewidth]{LogoUC.jpg}%
+      }{%
+        \fbox{\parbox[c][2.1cm][c]{0.85\linewidth}{%
+          \centering\small Logo UC}}%
+      }
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.83\textwidth}
+      \vspace{0pt}
+      \raggedright\small
+      \textsc{\Universidad}\par
+      \Escuela\par
+      \Departamento\par
+      \CodigoCurso\ -- \NombreCurso\par
+      Sección \SeccionCurso\par
+      Profesor: \ProfesorCurso\par
+      \SemestreCurso
+    \end{minipage}
+
+    \vspace*{3cm}
+    \begin{center}
+      {\Large Desafío de Investigación\par}
+      \vspace{0.6cm}
+      {\Huge\bfseries \TituloInforme\par}
+      \vspace{0.5cm}
+      \hrule
+      \vspace{0.5cm}
+      {\Large \NombreProyecto\par}
+      \vspace{0.4cm}
+      {\normalsize Cuarto entregable\par}
+    \end{center}
+
+    \vfill
+    \begin{flushright}
+      \textbf{Integrantes}\par
+      \begin{tabular}{@{}r@{}}
+        \Integrantes
+      \end{tabular}\par
+      \vspace{0.8cm}
+      Fecha de entrega: \FechaEntrega
+    \end{flushright}
+  \end{titlepage}
+}
