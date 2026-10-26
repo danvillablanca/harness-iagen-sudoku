@@ -219,3 +219,13 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 .DS_Store
+
+# LATEX
+informe_IIC3694/informe.toc
+informe_IIC3694/informe.out
+informe_IIC3694/informe.log
+informe_IIC3694/informe.fls
+informe_IIC3694/informe.fdb_latexmk
+informe_IIC3694/informe.blg
+informe_IIC3694/informe.bbl
+informe_IIC3694/informe.aux
