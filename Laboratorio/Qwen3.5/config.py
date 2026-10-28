@@ -23,7 +23,7 @@ class ModelConfig:
             raise ValueError("backend must be auto, mlx, cuda, mps, or cpu.")
         if type(self.thinking) is not bool:
             raise ValueError("thinking must be True or False.")
-        if type(self.max_output_tokens) is not int or not 1 <= self.max_output_tokens <= 4096:
-            raise ValueError("max_output_tokens must be between 1 and 4096.")
+        if type(self.max_output_tokens) is not int or self.max_output_tokens < 1:
+            raise ValueError("max_output_tokens must be a positive integer.")
         if type(self.max_prompt_tokens) is not int or self.max_prompt_tokens < 1:
             raise ValueError("max_prompt_tokens must be a positive integer.")

@@ -21,12 +21,12 @@ GIB = 1024**3
 RAM_GIB = {"mlx": 8, "mps": 8, "cuda": 6, "cpu": 12}
 
 MAX_PROMPT_TOKENS = 2048
-MAX_OUTPUT_TOKENS = 4096
 
 
 def _check_resources(backend):
-    if (psutil.cpu_count(logical=True) or 0) < 4:
-        raise RuntimeError("At least 4 logical CPUs are required.")
+    minimum_cpus = 4 if backend == "cpu" else 2
+    if (psutil.cpu_count(logical=True) or 0) < minimum_cpus:
+        raise RuntimeError(f"At least {minimum_cpus} logical CPUs are required for {backend}.")
 
     available = psutil.virtual_memory().available / GIB
     if available < RAM_GIB[backend]:
@@ -99,9 +99,9 @@ class Qwen:
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Provide a nonempty text prompt.")
 
-        if type(max_tokens) is not int or not 1 <= max_tokens <= MAX_OUTPUT_TOKENS:
+        if type(max_tokens) is not int or max_tokens < 1:
             raise ValueError(
-                f"max_tokens must be an integer between 1 and {MAX_OUTPUT_TOKENS}."
+                "max_tokens must be a positive integer."
             )
 
         if type(enable_thinking) is not bool:
@@ -207,11 +207,15 @@ class Qwen:
         else:
             finish_reason = None
 
+        # Keep the closing thinking marker so the parser can separate reasoning
+        # from the final answer, while removing other model control tokens.
+        text = self.tokenizer.decode(continuation_ids, skip_special_tokens=False)
+        for special_token in self.tokenizer.all_special_tokens:
+            if special_token != "</think>":
+                text = text.replace(special_token, "")
+
         return GenerationResult(
-            text=self.tokenizer.decode(
-                continuation_ids,
-                skip_special_tokens=True,
-            ),
+            text=text,
             prompt_tokens=prompt_tokens,
             generated_tokens=generated_tokens,
             finish_reason=finish_reason,
@@ -277,7 +281,8 @@ def load_model(config: ModelConfig | None = None) -> Qwen:
     from transformers import AutoTokenizer, Qwen3_5ForCausalLM
 
     dtype = torch.float32 if backend == "cpu" else torch.float16
-    if backend == "cuda" and torch.cuda.is_bf16_supported():
+    if (backend == "cuda" and torch.cuda.get_device_capability()[0] >= 8
+            and torch.cuda.is_bf16_supported()):
         dtype = torch.bfloat16
 
     tokenizer = AutoTokenizer.from_pretrained(config.model_id)
