@@ -1,0 +1,237 @@
+# sudoku.py
+
+import json
+from pathlib import Path
+from string import Formatter
+
+
+CHECK_NAMES = (
+    "All cells filled",
+    "Allowed values",
+    "Rows",
+    "Columns",
+    "Boxes",
+    "Original clues",
+    "Matches reference",
+)
+
+
+def _shape_ok(grid, size):
+    return (
+        isinstance(grid, list)
+        and len(grid) == size
+        and all(
+            isinstance(row, list) and len(row) == size
+            for row in grid
+        )
+    )
+
+
+def load_sudoku(path) -> dict:
+    with Path(path).open(encoding="utf-8") as handle:
+        case = json.load(handle)
+
+    if not isinstance(case, dict):
+        raise ValueError("The Sudoku configuration must be a JSON object.")
+
+    required = {
+        "name",
+        "size",
+        "box_rows",
+        "box_columns",
+        "puzzle",
+        "expected_solution",
+        "prompt_template",
+    }
+
+    if missing := required - case.keys():
+        raise ValueError(
+            f"Missing configuration fields: {', '.join(sorted(missing))}."
+        )
+
+    for key in ("name", "prompt_template"):
+        if not isinstance(case[key], str) or not case[key].strip():
+            raise ValueError(f"{key} must be a nonempty string.")
+
+    for key in ("size", "box_rows", "box_columns"):
+        if type(case[key]) is not int or case[key] <= 0:
+            raise ValueError(f"{key} must be a positive integer.")
+
+    size = case["size"]
+
+    if case["box_rows"] * case["box_columns"] != size:
+        raise ValueError("box_rows * box_columns must equal size.")
+
+    for key, minimum in (("puzzle", 0), ("expected_solution", 1)):
+        grid = case[key]
+
+        if not _shape_ok(grid, size):
+            raise ValueError(f"{key} must be a {size}x{size} array.")
+
+        if any(
+            type(value) is not int or not minimum <= value <= size
+            for row in grid
+            for value in row
+        ):
+            raise ValueError(
+                f"{key} must contain integers from {minimum} to {size}."
+            )
+
+    reference_checks = evaluate_grid(
+        case["expected_solution"], case
+    )["checks"]
+
+    failed = [
+        name
+        for name, passed in reference_checks.items()
+        if not passed
+    ]
+
+    if failed:
+        raise ValueError(
+            "Invalid reference solution: " + ", ".join(failed)
+        )
+
+    # Validate the template before loading the model.
+    build_prompt(case)
+
+    return case
+
+
+def build_prompt(case: dict) -> str:
+    puzzle_text = (
+        "[\n"
+        + ",\n".join(
+            "  " + json.dumps(row)
+            for row in case["puzzle"]
+        )
+        + "\n]"
+    )
+
+    # Only these values are available to the prompt template.
+    # expected_solution is deliberately excluded.
+    values = {
+        "size": case["size"],
+        "box_rows": case["box_rows"],
+        "box_columns": case["box_columns"],
+        "puzzle": puzzle_text,
+    }
+
+    for _, field, spec, conversion in Formatter().parse(
+        case["prompt_template"]
+    ):
+        if field is not None and (
+            field not in values or spec or conversion
+        ):
+            raise ValueError(
+                "Prompt placeholders must be size, box_rows, "
+                "box_columns, or puzzle."
+            )
+
+    return case["prompt_template"].format(**values)
+
+
+def evaluate_grid(
+    grid: list[list[int]] | None,
+    case: dict,
+) -> dict:
+    size = case["size"]
+    puzzle = case["puzzle"]
+
+    empty_positions = [
+        (r, c)
+        for r in range(size)
+        for c in range(size)
+        if puzzle[r][c] == 0
+    ]
+    clue_positions = [
+        (r, c)
+        for r in range(size)
+        for c in range(size)
+        if puzzle[r][c] != 0
+    ]
+
+    report = {
+        "checks": dict.fromkeys(CHECK_NAMES),
+        "copied_input": None,
+        "empty_cells_remaining": None,
+        "filled_empty_cells": None,
+        "initial_empty_cells": len(empty_positions),
+        "clues_preserved": None,
+        "total_clues": len(clue_positions),
+    }
+
+    # No recovered grid means mathematical checks were not performed.
+    if grid is None:
+        return report
+
+    if (
+        not _shape_ok(grid, size)
+        or any(
+            type(value) is not int
+            for row in grid
+            for value in row
+        )
+    ):
+        report.update(
+            checks=dict.fromkeys(CHECK_NAMES, False),
+            copied_input=False,
+        )
+        return report
+
+    digits = set(range(1, size + 1))
+    box_rows = case["box_rows"]
+    box_columns = case["box_columns"]
+
+    preserved = sum(
+        grid[r][c] == puzzle[r][c]
+        for r, c in clue_positions
+    )
+
+    report["checks"] = {
+        "All cells filled": all(
+            value != 0
+            for row in grid
+            for value in row
+        ),
+        "Allowed values": all(
+            value in digits
+            for row in grid
+            for value in row
+        ),
+        "Rows": all(
+            set(row) == digits
+            for row in grid
+        ),
+        "Columns": all(
+            {grid[r][c] for r in range(size)} == digits
+            for c in range(size)
+        ),
+        "Boxes": all(
+            {
+                grid[r][c]
+                for r in range(r0, r0 + box_rows)
+                for c in range(c0, c0 + box_columns)
+            } == digits
+            for r0 in range(0, size, box_rows)
+            for c0 in range(0, size, box_columns)
+        ),
+        "Original clues": preserved == len(clue_positions),
+        "Matches reference": grid == case["expected_solution"],
+    }
+
+    report.update(
+        copied_input=grid == puzzle,
+        empty_cells_remaining=sum(
+            value == 0
+            for row in grid
+            for value in row
+        ),
+        filled_empty_cells=sum(
+            grid[r][c] in digits
+            for r, c in empty_positions
+        ),
+        clues_preserved=preserved,
+    )
+
+    return report
