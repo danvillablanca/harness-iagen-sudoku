@@ -12,6 +12,8 @@ from pathlib import Path
 import psutil
 from huggingface_hub import constants as hf
 
+from config import ModelConfig
+
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
 MODEL_ID = "Qwen/Qwen3.5-2B"
@@ -67,13 +69,14 @@ class Qwen:
     model: object
     tokenizer: object
     backend: str
+    config: ModelConfig
 
     def generate(
         self,
         prompt: str,
-        max_tokens: int = 2048,
+        max_tokens: int | None = None,
         *,
-        enable_thinking: bool = False,
+        enable_thinking: bool | None = None,
     ) -> str:
         """Return only the generated text, preserving the original interface."""
         return self.generate_with_stats(
@@ -85,11 +88,14 @@ class Qwen:
     def generate_with_stats(
         self,
         prompt: str,
-        max_tokens: int = 2048,
+        max_tokens: int | None = None,
         *,
-        enable_thinking: bool = False,
+        enable_thinking: bool | None = None,
     ) -> GenerationResult:
         """Return text and token counts measured during generation."""
+        max_tokens = self.config.max_output_tokens if max_tokens is None else max_tokens
+        enable_thinking = self.config.thinking if enable_thinking is None else enable_thinking
+
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Provide a nonempty text prompt.")
 
@@ -111,10 +117,10 @@ class Qwen:
 
         prompt_tokens = len(tokens)
 
-        if prompt_tokens > MAX_PROMPT_TOKENS:
+        if prompt_tokens > self.config.max_prompt_tokens:
             raise ValueError(
                 f"The prompt contains {prompt_tokens} tokens; "
-                f"the limit is {MAX_PROMPT_TOKENS}."
+                f"the limit is {self.config.max_prompt_tokens}."
             )
 
         if self.backend == "mlx":
@@ -213,10 +219,12 @@ class Qwen:
         )
 
 
-def load_model() -> Qwen:
+def load_model(config: ModelConfig | None = None) -> Qwen:
     """Load the model after checking available resources."""
+    config = config or ModelConfig()
     if (
-        platform.system() == "Darwin"
+        config.backend in ("auto", "mlx")
+        and platform.system() == "Darwin"
         and platform.machine() == "arm64"
         and find_spec("mlx_lm")
     ):
@@ -235,13 +243,16 @@ def load_model() -> Qwen:
                 )
 
             with mx.stream(mx.gpu):
-                model, tokenizer = load(MODEL_ID, lazy=False)
+                model, tokenizer = load(config.model_id, lazy=False)
 
-            return Qwen(model, tokenizer, "mlx")
+            return Qwen(model, tokenizer, "mlx", config)
+
+    if config.backend == "mlx":
+        raise RuntimeError("MLX requires mlx_lm and an available Apple Silicon GPU.")
 
     import torch
 
-    backend = (
+    backend = config.backend if config.backend != "auto" else (
         "cuda"
         if torch.cuda.is_available()
         else "mps"
@@ -249,6 +260,10 @@ def load_model() -> Qwen:
         else "cpu"
     )
 
+    if backend == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available.")
+    if backend == "mps" and not torch.backends.mps.is_available():
+        raise RuntimeError("MPS is not available.")
     _check_resources(backend)
 
     if backend == "cuda" and torch.cuda.mem_get_info()[0] < 6 * GIB:
@@ -265,9 +280,9 @@ def load_model() -> Qwen:
     if backend == "cuda" and torch.cuda.is_bf16_supported():
         dtype = torch.bfloat16
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer = AutoTokenizer.from_pretrained(config.model_id)
     model = (
-        Qwen3_5ForCausalLM.from_pretrained(MODEL_ID, dtype=dtype)
+        Qwen3_5ForCausalLM.from_pretrained(config.model_id, dtype=dtype)
         .to(backend)
         .eval()
     )
@@ -277,4 +292,4 @@ def load_model() -> Qwen:
     elif backend == "mps":
         torch.mps.synchronize()
 
-    return Qwen(model, tokenizer, backend)
+    return Qwen(model, tokenizer, backend, config)
