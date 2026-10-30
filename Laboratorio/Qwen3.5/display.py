@@ -19,4 +19,6 @@ def print_result(case, report, result, max_output_tokens, load_seconds, generati
     print(format_grid(case.data["expected_solution"]))
     print("\nModel's solution:")
     print(format_grid(report["parsed"].grid))
+    print("\nModel output:")
+    print(result.text)
     print(f"\nResult: {'PASSED' if report['passed'] else 'FAIL'}")

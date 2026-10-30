@@ -1,3 +1,5 @@
+import argparse
+
 from config import ModelConfig
 from display import print_result
 from evaluation import evaluate
@@ -6,8 +8,21 @@ from prompts import prompts
 from timing import timed
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the Sudoku harness.")
+    parser.add_argument(
+        "--thinking",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="enable or disable Qwen's reasoning mode (default: enabled)",
+    )
+    parser.add_argument("--max-output-tokens", type=int, default=8192)
+    return parser.parse_args()
+
+
 def main() -> int:
-    config = ModelConfig(thinking=True, max_output_tokens=8192)
+    args = parse_args()
+    config = ModelConfig(thinking=args.thinking, max_output_tokens=args.max_output_tokens)
     case = prompts["sudoku9x9"]["hard"]
 
     model, load_seconds = timed(load_model, config)
