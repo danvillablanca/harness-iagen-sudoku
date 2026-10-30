@@ -43,6 +43,7 @@ def load_sudoku(path) -> dict:
         "puzzle",
         "expected_solution",
         "prompt_template",
+        "steps_prompt_template",
     }
 
     if missing := required - case.keys():
@@ -50,7 +51,7 @@ def load_sudoku(path) -> dict:
             f"Missing configuration fields: {', '.join(sorted(missing))}."
         )
 
-    for key in ("name", "prompt_template"):
+    for key in ("name", "prompt_template", "steps_prompt_template"):
         if not isinstance(case[key], str) or not case[key].strip():
             raise ValueError(f"{key} must be a nonempty string.")
 
@@ -93,13 +94,14 @@ def load_sudoku(path) -> dict:
             "Invalid reference solution: " + ", ".join(failed)
         )
 
-    # Validate the template before loading the model.
+    # Validate the templates before loading the model.
     build_prompt(case)
+    build_prompt(case, with_steps=True)
 
     return case
 
 
-def build_prompt(case: dict) -> str:
+def build_prompt(case: dict, with_steps: bool = False) -> str:
     puzzle_text = (
         "[\n"
         + ",\n".join(
@@ -118,9 +120,9 @@ def build_prompt(case: dict) -> str:
         "puzzle": puzzle_text,
     }
 
-    for _, field, spec, conversion in Formatter().parse(
-        case["prompt_template"]
-    ):
+    template = case["steps_prompt_template" if with_steps else "prompt_template"]
+
+    for _, field, spec, conversion in Formatter().parse(template):
         if field is not None and (
             field not in values or spec or conversion
         ):
@@ -129,35 +131,43 @@ def build_prompt(case: dict) -> str:
                 "box_columns, or puzzle."
             )
 
-    return case["prompt_template"].format(**values)
+    return template.format(**values)
+
+
+def _candidates(grid, r, c, case):
+    size = case["size"]
+    box_rows = case["box_rows"]
+    box_columns = case["box_columns"]
+    used = set(grid[r]) | {grid[i][c] for i in range(size)}
+    r0 = r - r % box_rows
+    c0 = c - c % box_columns
+    used |= {
+        grid[i][j]
+        for i in range(r0, r0 + box_rows)
+        for j in range(c0, c0 + box_columns)
+    }
+    return [v for v in range(1, size + 1) if v not in used]
+
+
+def _most_constrained_cell(grid, case):
+    """Empty cell with the fewest candidates as (r, c, options), or None."""
+    size = case["size"]
+    best = None
+    for r in range(size):
+        for c in range(size):
+            if grid[r][c] == 0:
+                options = _candidates(grid, r, c, case)
+                if best is None or len(options) < len(best[2]):
+                    best = (r, c, options)
+    return best
 
 
 def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
     """Count completions of `puzzle` by backtracking, stopping at `limit`."""
-    size = case["size"]
-    box_rows = case["box_rows"]
-    box_columns = case["box_columns"]
     grid = [row[:] for row in puzzle]
 
-    def candidates(r, c):
-        used = set(grid[r]) | {grid[i][c] for i in range(size)}
-        r0 = r - r % box_rows
-        c0 = c - c % box_columns
-        used |= {
-            grid[i][j]
-            for i in range(r0, r0 + box_rows)
-            for j in range(c0, c0 + box_columns)
-        }
-        return [v for v in range(1, size + 1) if v not in used]
-
     def solve():
-        best = None
-        for r in range(size):
-            for c in range(size):
-                if grid[r][c] == 0:
-                    options = candidates(r, c)
-                    if best is None or len(options) < len(best[2]):
-                        best = (r, c, options)
+        best = _most_constrained_cell(grid, case)
         if best is None:
             return 1
 
@@ -172,6 +182,42 @@ def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
         return total
 
     return solve()
+
+
+def random_solution(case: dict, seed: int | None = None) -> list[list[int]]:
+    """Random completed grid obeying the rules of `case`, by backtracking."""
+    size = case["size"]
+    rng = random.Random(seed)
+    grid = [[0] * size for _ in range(size)]
+
+    def fill():
+        best = _most_constrained_cell(grid, case)
+        if best is None:
+            return True
+        r, c, options = best
+        rng.shuffle(options)
+        for value in options:
+            grid[r][c] = value
+            if fill():
+                return True
+            grid[r][c] = 0
+        return False
+
+    fill()
+    return grid
+
+
+def solution_steps(
+    puzzle: list[list[int]], solution: list[list[int]], case: dict
+) -> list[tuple[int, int, int]]:
+    """Order in which to fill the blanks: most constrained cell first."""
+    grid = [row[:] for row in puzzle]
+    steps = []
+    while (best := _most_constrained_cell(grid, case)) is not None:
+        r, c, _ = best
+        grid[r][c] = solution[r][c]
+        steps.append((r, c, solution[r][c]))
+    return steps
 
 
 def with_empty_cells(

@@ -77,12 +77,14 @@ class Qwen:
         max_tokens: int | None = None,
         *,
         enable_thinking: bool | None = None,
+        shots: tuple = (),
     ) -> str:
         """Return only the generated text, preserving the original interface."""
         return self.generate_with_stats(
             prompt,
             max_tokens=max_tokens,
             enable_thinking=enable_thinking,
+            shots=shots,
         ).text
 
     def generate_with_stats(
@@ -91,8 +93,13 @@ class Qwen:
         max_tokens: int | None = None,
         *,
         enable_thinking: bool | None = None,
+        shots: tuple = (),
     ) -> GenerationResult:
-        """Return text and token counts measured during generation."""
+        """Return text and token counts measured during generation.
+
+        `shots` is a sequence of (user, assistant) example turns placed
+        before the prompt.
+        """
         max_tokens = self.config.max_output_tokens if max_tokens is None else max_tokens
         enable_thinking = self.config.thinking if enable_thinking is None else enable_thinking
 
@@ -107,8 +114,14 @@ class Qwen:
         if type(enable_thinking) is not bool:
             raise ValueError("enable_thinking must be True or False.")
 
+        messages = []
+        for user_text, assistant_text in shots:
+            messages.append({"role": "user", "content": user_text})
+            messages.append({"role": "assistant", "content": assistant_text})
+        messages.append({"role": "user", "content": prompt})
+
         tokens = self.tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}],
+            messages,
             tokenize=True,
             return_dict=False,
             add_generation_prompt=True,

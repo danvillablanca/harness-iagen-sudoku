@@ -23,7 +23,7 @@ class ParsedAnswer:
     issues: tuple[str, ...]
 
 
-def parse_answer(response: str, size: int) -> ParsedAnswer:
+def parse_answer(response: str, size: int, allow_steps: bool = False) -> ParsedAnswer:
     if type(size) is not int or size < 1:
         raise ValueError("size must be a positive integer.")
 
@@ -58,7 +58,11 @@ def parse_answer(response: str, size: int) -> ParsedAnswer:
         payload = match.group(1).strip(JSON_WHITESPACE)
         source = "answer_tags"
 
-        format_ok = text == match.group(0)
+        # With step-by-step prompting, work shown before the block is expected.
+        if allow_steps:
+            format_ok = text.endswith(match.group(0))
+        else:
+            format_ok = text == match.group(0)
 
         if not format_ok:
             issues.append("Extra text appears outside the answer block.")
