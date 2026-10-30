@@ -66,3 +66,7 @@ por llamada `max_tokens`, `enable_thinking` y `shots` (pares usuario/asistente
 antes del prompt), que reemplazan los valores de la configuración. `timed(funcion, argumentos...)` devuelve `(resultado, segundos)`
 y `evaluate(resultado.text, case)` verifica la respuesta; para el texto de
 `generate`, pasa directamente ese texto a `evaluate`.
+
+## Pendientes
+
+Ver [TODO.md](TODO.md).
