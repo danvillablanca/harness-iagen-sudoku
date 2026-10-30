@@ -1,6 +1,7 @@
 # sudoku.py
 
 import json
+import random
 from pathlib import Path
 from string import Formatter
 
@@ -129,6 +130,80 @@ def build_prompt(case: dict) -> str:
             )
 
     return case["prompt_template"].format(**values)
+
+
+def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
+    """Count completions of `puzzle` by backtracking, stopping at `limit`."""
+    size = case["size"]
+    box_rows = case["box_rows"]
+    box_columns = case["box_columns"]
+    grid = [row[:] for row in puzzle]
+
+    def candidates(r, c):
+        used = set(grid[r]) | {grid[i][c] for i in range(size)}
+        r0 = r - r % box_rows
+        c0 = c - c % box_columns
+        used |= {
+            grid[i][j]
+            for i in range(r0, r0 + box_rows)
+            for j in range(c0, c0 + box_columns)
+        }
+        return [v for v in range(1, size + 1) if v not in used]
+
+    def solve():
+        best = None
+        for r in range(size):
+            for c in range(size):
+                if grid[r][c] == 0:
+                    options = candidates(r, c)
+                    if best is None or len(options) < len(best[2]):
+                        best = (r, c, options)
+        if best is None:
+            return 1
+
+        r, c, options = best
+        total = 0
+        for value in options:
+            grid[r][c] = value
+            total += solve()
+            grid[r][c] = 0
+            if total >= limit:
+                break
+        return total
+
+    return solve()
+
+
+def with_empty_cells(
+    case: dict,
+    empty_cells: int,
+    seed: int | None = None,
+    max_attempts: int = 1000,
+) -> dict:
+    """Return a copy of `case` whose puzzle is the reference solution with
+    `empty_cells` random cells blanked, resampled until the solution is unique."""
+    size = case["size"]
+
+    if not 0 <= empty_cells <= size * size:
+        raise ValueError(
+            f"empty_cells must be between 0 and {size * size}."
+        )
+
+    rng = random.Random(seed)
+    positions = [(r, c) for r in range(size) for c in range(size)]
+
+    for _ in range(max_attempts):
+        puzzle = [row[:] for row in case["expected_solution"]]
+        for r, c in rng.sample(positions, empty_cells):
+            puzzle[r][c] = 0
+
+        if count_solutions(puzzle, case) == 1:
+            return {**case, "puzzle": puzzle}
+
+    raise ValueError(
+        f"Could not find a uniquely solvable puzzle with {empty_cells} "
+        f"empty cells in {max_attempts} attempts."
+    )
 
 
 def evaluate_grid(
