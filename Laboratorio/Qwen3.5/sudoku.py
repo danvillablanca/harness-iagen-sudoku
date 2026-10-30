@@ -197,14 +197,38 @@ def solution_steps(
     return steps
 
 
+def is_deducible(puzzle: list[list[int]], case: dict) -> bool:
+    """True if repeatedly filling an empty cell that has exactly one
+    candidate completes the grid (no guessing needed)."""
+    size = case["size"]
+    grid = [row[:] for row in puzzle]
+    while True:
+        empty = [
+            (r, c) for r in range(size) for c in range(size) if grid[r][c] == 0
+        ]
+        if not empty:
+            return True
+        for r, c in empty:
+            options = _candidates(grid, r, c, case)
+            if len(options) == 1:
+                grid[r][c] = options[0]
+                break
+        else:
+            return False
+
+
+MAX_BLANKING_ATTEMPTS = 1000
+
+
 def with_empty_cells(
     case: dict,
     empty_cells: int,
     seed: int | None = None,
 ) -> dict:
     """Return a copy of `case` whose puzzle is the reference solution with
-    `empty_cells` random cells blanked. The solution need not be unique: any
-    grid passing the rule checks is accepted."""
+    `empty_cells` random cells blanked, resampled until the puzzle can be
+    solved by only filling cells with a single candidate. The solution need
+    not be unique: any grid passing the rule checks is accepted."""
     size = case["size"]
 
     if not 0 <= empty_cells <= size * size:
@@ -214,10 +238,16 @@ def with_empty_cells(
 
     rng = random.Random(seed)
     positions = [(r, c) for r in range(size) for c in range(size)]
-    puzzle = [row[:] for row in case["expected_solution"]]
-    for r, c in rng.sample(positions, empty_cells):
-        puzzle[r][c] = 0
-    return {**case, "puzzle": puzzle}
+    for _ in range(MAX_BLANKING_ATTEMPTS):
+        puzzle = [row[:] for row in case["expected_solution"]]
+        for r, c in rng.sample(positions, empty_cells):
+            puzzle[r][c] = 0
+        if is_deducible(puzzle, case):
+            return {**case, "puzzle": puzzle}
+    raise ValueError(
+        f"Could not blank {empty_cells} cells so that every step has a "
+        f"single candidate after {MAX_BLANKING_ATTEMPTS} attempts."
+    )
 
 
 def evaluate_grid(
