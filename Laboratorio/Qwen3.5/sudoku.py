@@ -13,7 +13,6 @@ CHECK_NAMES = (
     "Columns",
     "Boxes",
     "Original clues",
-    "Matches reference",
 )
 
 
@@ -162,28 +161,6 @@ def _most_constrained_cell(grid, case):
     return best
 
 
-def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
-    """Count completions of `puzzle` by backtracking, stopping at `limit`."""
-    grid = [row[:] for row in puzzle]
-
-    def solve():
-        best = _most_constrained_cell(grid, case)
-        if best is None:
-            return 1
-
-        r, c, options = best
-        total = 0
-        for value in options:
-            grid[r][c] = value
-            total += solve()
-            grid[r][c] = 0
-            if total >= limit:
-                break
-        return total
-
-    return solve()
-
-
 def random_solution(case: dict, seed: int | None = None) -> list[list[int]]:
     """Random completed grid obeying the rules of `case`, by backtracking."""
     size = case["size"]
@@ -224,10 +201,10 @@ def with_empty_cells(
     case: dict,
     empty_cells: int,
     seed: int | None = None,
-    max_attempts: int = 1000,
 ) -> dict:
     """Return a copy of `case` whose puzzle is the reference solution with
-    `empty_cells` random cells blanked, resampled until the solution is unique."""
+    `empty_cells` random cells blanked. The solution need not be unique: any
+    grid passing the rule checks is accepted."""
     size = case["size"]
 
     if not 0 <= empty_cells <= size * size:
@@ -237,19 +214,10 @@ def with_empty_cells(
 
     rng = random.Random(seed)
     positions = [(r, c) for r in range(size) for c in range(size)]
-
-    for _ in range(max_attempts):
-        puzzle = [row[:] for row in case["expected_solution"]]
-        for r, c in rng.sample(positions, empty_cells):
-            puzzle[r][c] = 0
-
-        if count_solutions(puzzle, case) == 1:
-            return {**case, "puzzle": puzzle}
-
-    raise ValueError(
-        f"Could not find a uniquely solvable puzzle with {empty_cells} "
-        f"empty cells in {max_attempts} attempts."
-    )
+    puzzle = [row[:] for row in case["expected_solution"]]
+    for r, c in rng.sample(positions, empty_cells):
+        puzzle[r][c] = 0
+    return {**case, "puzzle": puzzle}
 
 
 def evaluate_grid(
@@ -338,7 +306,6 @@ def evaluate_grid(
             for c0 in range(0, size, box_columns)
         ),
         "Original clues": preserved == len(clue_positions),
-        "Matches reference": grid == case["expected_solution"],
     }
 
     report.update(

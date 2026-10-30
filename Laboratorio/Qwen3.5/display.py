@@ -16,7 +16,7 @@ def print_result(case, report, result, max_output_tokens, load_seconds, generati
     print(f"Shots: {len(case.shots)}")
     print("\nSudoku:")
     print(format_grid(case.data["puzzle"]))
-    print("\nExpected solution:")
+    print("\nReference solution (any valid solution passes):")
     print(format_grid(case.data["expected_solution"]))
     print("\nModel's solution:")
     print(format_grid(report["parsed"].grid))
