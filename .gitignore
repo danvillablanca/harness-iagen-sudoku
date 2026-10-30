@@ -229,3 +229,7 @@ informe_IIC3694/informe.fdb_latexmk
 informe_IIC3694/informe.blg
 informe_IIC3694/informe.bbl
 informe_IIC3694/informe.aux
+
+logs
+scripts
+*local*

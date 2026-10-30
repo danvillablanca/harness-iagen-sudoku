@@ -4,26 +4,207 @@
   "box_rows": 3,
   "box_columns": 3,
   "puzzle": [
-    [8, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 3, 6, 0, 0, 0, 0, 0],
-    [0, 7, 0, 0, 9, 0, 2, 0, 0],
-    [0, 5, 0, 0, 0, 7, 0, 0, 0],
-    [0, 0, 0, 0, 4, 5, 7, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 3, 0],
-    [0, 0, 1, 0, 0, 0, 0, 6, 8],
-    [0, 0, 8, 5, 0, 0, 0, 1, 0],
-    [0, 9, 0, 0, 0, 0, 4, 0, 0]
+    [
+      8,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      3,
+      6,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      7,
+      0,
+      0,
+      9,
+      0,
+      2,
+      0,
+      0
+    ],
+    [
+      0,
+      5,
+      0,
+      0,
+      0,
+      7,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      4,
+      5,
+      7,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      3,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      6,
+      8
+    ],
+    [
+      0,
+      0,
+      8,
+      5,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      9,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0
+    ]
   ],
   "expected_solution": [
-    [8, 1, 2, 7, 5, 3, 6, 4, 9],
-    [9, 4, 3, 6, 8, 2, 1, 7, 5],
-    [6, 7, 5, 4, 9, 1, 2, 8, 3],
-    [1, 5, 4, 2, 3, 7, 8, 9, 6],
-    [3, 6, 9, 8, 4, 5, 7, 2, 1],
-    [2, 8, 7, 1, 6, 9, 5, 3, 4],
-    [5, 2, 1, 9, 7, 4, 3, 6, 8],
-    [4, 3, 8, 5, 2, 6, 9, 1, 7],
-    [7, 9, 6, 3, 1, 8, 4, 5, 2]
+    [
+      8,
+      1,
+      2,
+      7,
+      5,
+      3,
+      6,
+      4,
+      9
+    ],
+    [
+      9,
+      4,
+      3,
+      6,
+      8,
+      2,
+      1,
+      7,
+      5
+    ],
+    [
+      6,
+      7,
+      5,
+      4,
+      9,
+      1,
+      2,
+      8,
+      3
+    ],
+    [
+      1,
+      5,
+      4,
+      2,
+      3,
+      7,
+      8,
+      9,
+      6
+    ],
+    [
+      3,
+      6,
+      9,
+      8,
+      4,
+      5,
+      7,
+      2,
+      1
+    ],
+    [
+      2,
+      8,
+      7,
+      1,
+      6,
+      9,
+      5,
+      3,
+      4
+    ],
+    [
+      5,
+      2,
+      1,
+      9,
+      7,
+      4,
+      3,
+      6,
+      8
+    ],
+    [
+      4,
+      3,
+      8,
+      5,
+      2,
+      6,
+      9,
+      1,
+      7
+    ],
+    [
+      7,
+      9,
+      6,
+      3,
+      1,
+      8,
+      4,
+      5,
+      2
+    ]
   ],
-  "prompt_template": "Solve the following {size}x{size} Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to {size}.\n- Each row must contain the numbers 1 through {size} exactly once.\n- Each column must contain the numbers 1 through {size} exactly once.\n- Each {box_rows}x{box_columns} box must contain 1 through {size} exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n{puzzle}\n\nReturn the completed grid. No zeros may remain.\nCheck all rows, columns, boxes, and original clues before answering.\n\nReturn exactly one <answer>...</answer> block.\nInside the block, return a JSON array of {size} arrays of {size} integers each.\nDo not include explanations, comments, Markdown fences, or text outside the block."
+  "prompt_template": "Solve the following {size}x{size} Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to {size}.\n- Each row must contain the numbers 1 through {size} exactly once.\n- Each column must contain the numbers 1 through {size} exactly once.\n- Each {box_rows}x{box_columns} box must contain 1 through {size} exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n{puzzle}\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck all rows, columns, boxes, and original clues before answering.\n\nReturn exactly one <answer>...</answer> block.\nInside the block, return a JSON array of {size} arrays of {size} integers each.\nDo not include explanations, comments, Markdown fences, or text outside the block.",
+  "steps_prompt_template": "Solve the following {size}x{size} Sudoku by filling one empty cell at a time.\n\nRules:\n- A 0 represents an empty cell.\n- Each row must contain the numbers 1 through {size} exactly once.\n- Each column must contain the numbers 1 through {size} exactly once.\n- Each {box_rows}x{box_columns} box must contain 1 through {size} exactly once.\n- Do not change any original nonzero number.\n- Any grid that satisfies all the rules is a valid answer; the solution need not be unique.\n\nPuzzle:\n{puzzle}\n\nProcedure:\n- Fill exactly one empty cell per step. Write 'Step k: rRcC = V' (row R, column C, value V), followed by the full grid as {size} lines of {size} digits (0 = empty).\n- Repeat until no zeros remain.\n- Then write the final grid in exactly one <answer>...</answer> block, as a JSON array of {size} arrays of {size} integers each. Do not write <answer> anywhere else."
 }

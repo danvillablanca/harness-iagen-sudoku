@@ -34,9 +34,39 @@ En `main.py`, `ModelConfig` permite configurar el modelo, backend (`auto`,
 un caso con `prompts["sudoku9x9"]["hard"]`; esta etiqueta aún no ha sido
 calibrada experimentalmente. Añade casos al registro en `prompts.py`.
 
+### Argumentos de línea de comandos
+
+| Argumento | Descripción | Por defecto |
+| --- | --- | --- |
+| `--thinking` / `--no-thinking` | Activa o desactiva el modo de razonamiento de Qwen | activado |
+| `--max-output-tokens N` | Límite de tokens generados | 8192 |
+| `--max-prompt-tokens N` | Límite de tokens de entrada | 2048 (16384 si `--shots > 0`) |
+| `--empty-cells N` | Número de celdas vacías; elige al azar cuáles borrar de la solución | puzzle fijo de `sudoku.json` |
+| `--seed N` | Semilla para elegir las celdas vacías | 0 |
+| `--shots N` | Número de ejemplos resueltos (few-shot) antes del puzzle | 0 |
+| `--shot-seed N` | Semilla para generar los puzzles de los ejemplos | 0 |
+
+Con `--shots N`, cada ejemplo es un puzzle aleatorio distinto del de prueba
+(8 celdas vacías), resuelto una celda por vez: cada paso (`Step k: rXcY = v`)
+muestra la grilla completa, y la respuesta termina en `<answer>[...]</answer>`.
+El prompt del puzzle pide entonces el mismo procedimiento paso a paso, y el
+parser acepta el razonamiento previo al bloque `<answer>`.
+
+Al terminar, el harness imprime tiempos, tokens generados, motivo de término,
+número de shots, el puzzle, la solución esperada, la solución del modelo, la
+entrada completa al modelo (shots incluidos) y su salida completa.
+
+```sh
+python Laboratorio/Qwen3.5/main.py --no-thinking --empty-cells 20 --seed 1 --shots 2
+```
+
 `model.generate(case.prompt)` devuelve texto; `model.generate_with_stats(...)`
 devuelve también los tokens y el motivo de término. Ambas aceptan las opciones
-por llamada `max_tokens` y `enable_thinking`, que reemplazan los valores de la
-configuración. `timed(funcion, argumentos...)` devuelve `(resultado, segundos)`
+por llamada `max_tokens`, `enable_thinking` y `shots` (pares usuario/asistente
+antes del prompt), que reemplazan los valores de la configuración. `timed(funcion, argumentos...)` devuelve `(resultado, segundos)`
 y `evaluate(resultado.text, case)` verifica la respuesta; para el texto de
 `generate`, pasa directamente ese texto a `evaluate`.
+
+## Pendientes
+
+Ver [TODO.md](TODO.md).
