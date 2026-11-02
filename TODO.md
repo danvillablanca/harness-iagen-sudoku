@@ -1,23 +1,24 @@
 # TODO
 
-## Validar los steps en el parser
+## Crédito parcial y dificultad
 
-Con `--shots > 0`, `parse_answer(..., allow_steps=True)` (`Laboratorio/Qwen3.5/response_parser.py`)
-solo comprueba que el texto **termine** en un bloque `<answer>...</answer>` bien formado
-(`text.endswith(match.group(0))`). El texto anterior no se valida.
+La recompensa actual es binaria. Para añadir crédito parcial, definir y evaluar
+una medida que no penalice soluciones alternativas válidas. Una opción es contar
+coincidencias en las casillas originalmente vacías contra la solución válida más
+cercana, con todas las coincidencias pertenecientes a una misma solución.
+Hace falta resolver o acotar esa optimización y declarar qué ocurre si no puede
+completarse; no devolver un porcentaje aproximado como si fuera exacto.
 
-Por ahora es intencional, para mantenerlo simple. Una respuesta sin líneas `Step k:`, o con texto
-libre antes del bloque, igual obtiene `Required answer format = True`, aunque no siga el
-procedimiento paso a paso de los shots.
+Si se demuestra unicidad para una instancia, la comparación con su única solución
+es directa. Mantener separado el éxito completo (`passed`) del puntaje parcial.
+Definir los pesos configurables y su normalización para conservar el rango [0, 1].
 
-Pendiente: validar el texto previo al `<answer>` cuando `allow_steps=True`:
+## Análisis opcional de los pasos
 
-- que existan líneas `Step k: rXcY = v`
-- que `k` sea consecutivo desde 1
-- que cada paso llene exactamente una celda
-- que haya una grilla después de cada paso
-
-Opcional: registrar la cantidad de pasos como dato aparte.
+El contrato ahora permite explicaciones y pasos, pero solo evalúa el tablero
+del único bloque final. No se exige ni se valida la secuencia `Step k:`.
+Si se estudia la calidad del procedimiento, registrar esa evaluación por separado
+sin convertirla implícitamente en requisito de formato.
 
 ## Semillas y tope de reintentos en `make_shots`
 
