@@ -42,7 +42,6 @@ def load_sudoku(path) -> dict:
         "puzzle",
         "expected_solution",
         "prompt_template",
-        "steps_prompt_template",
     }
 
     if missing := required - case.keys():
@@ -50,7 +49,7 @@ def load_sudoku(path) -> dict:
             f"Missing configuration fields: {', '.join(sorted(missing))}."
         )
 
-    for key in ("name", "prompt_template", "steps_prompt_template"):
+    for key in ("name", "prompt_template"):
         if not isinstance(case[key], str) or not case[key].strip():
             raise ValueError(f"{key} must be a nonempty string.")
 
@@ -95,12 +94,11 @@ def load_sudoku(path) -> dict:
 
     # Validate the templates before loading the model.
     build_prompt(case)
-    build_prompt(case, with_steps=True)
 
     return case
 
 
-def build_prompt(case: dict, with_steps: bool = False) -> str:
+def build_prompt(case: dict) -> str:
     puzzle_text = (
         "[\n"
         + ",\n".join(
@@ -119,7 +117,7 @@ def build_prompt(case: dict, with_steps: bool = False) -> str:
         "puzzle": puzzle_text,
     }
 
-    template = case["steps_prompt_template" if with_steps else "prompt_template"]
+    template = case["prompt_template"]
 
     for _, field, spec, conversion in Formatter().parse(template):
         if field is not None and (

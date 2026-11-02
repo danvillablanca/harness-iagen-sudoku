@@ -5,7 +5,7 @@ from sudoku import evaluate_grid
 
 
 def evaluate(response, case):
-    parsed = parse_answer(response, case.data["size"], allow_steps=bool(case.shots))
+    parsed = parse_answer(response, case.data["size"])
     report = evaluate_grid(parsed.grid, case.data)
     checks = {
         "Required answer format": parsed.format_ok,

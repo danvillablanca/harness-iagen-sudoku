@@ -23,12 +23,27 @@ class ParsedAnswer:
     issues: tuple[str, ...]
 
 
-def parse_answer(response: str, size: int, allow_steps: bool = False) -> ParsedAnswer:
+def parse_answer(response: str, size: int) -> ParsedAnswer:
     if type(size) is not int or size < 1:
         raise ValueError("size must be a positive integer.")
 
-    # Remove a completed reasoning section when thinking mode is enabled.
-    text = response.rsplit("</think>", 1)[-1].strip(JSON_WHITESPACE)
+    if not isinstance(response, str):
+        return ParsedAnswer(None, "none", False, ("The response must be text.",))
+
+    text = response.strip(JSON_WHITESPACE)
+    # Qwen may generate only the closing marker: its opening marker can already
+    # be part of the chat template. Never use rsplit to hide earlier answers.
+    thinking_markers = re.findall(r"</?think\b[^>]*>", text, re.IGNORECASE)
+    if thinking_markers:
+        valid_markers = thinking_markers == ["</think>"] or (
+            thinking_markers == ["<think>", "</think>"] and text.startswith("<think>")
+        )
+        if not valid_markers:
+            return ParsedAnswer(None, "thinking", False, ("Malformed or unfinished thinking section.",))
+        thinking, _, text = text.partition("</think>")
+        if re.search(r"</?answer\b", thinking, re.IGNORECASE):
+            return ParsedAnswer(None, "thinking", False, ("Answer tags are not allowed inside the thinking section.",))
+        text = text.strip(JSON_WHITESPACE)
 
     issues = []
     format_ok = False
@@ -58,14 +73,12 @@ def parse_answer(response: str, size: int, allow_steps: bool = False) -> ParsedA
         payload = match.group(1).strip(JSON_WHITESPACE)
         source = "answer_tags"
 
-        # With step-by-step prompting, work shown before the block is expected.
-        if allow_steps:
-            format_ok = text.endswith(match.group(0))
-        else:
-            format_ok = text == match.group(0)
+        # Explanations and intermediate grids are allowed before the sole final
+        # answer, regardless of whether few-shot examples were supplied.
+        format_ok = text.endswith(match.group(0))
 
         if not format_ok:
-            issues.append("Extra text appears outside the answer block.")
+            issues.append("Text appears after the final answer block.")
 
     else:
         # Recover the array for diagnostics without accepting the wrong format.

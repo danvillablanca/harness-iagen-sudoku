@@ -65,20 +65,20 @@ def make_shots(base, test_puzzle, n_shots, seed=0):
         )
         if data["puzzle"] == test_puzzle:
             continue
-        shots.append((build_prompt(data, with_steps=True), _worked_example(data)))
+        shots.append((build_prompt(data), _worked_example(data)))
     return tuple(shots)
 
 
 def make_case(kind, difficulty, empty_cells=None, seed=0, shots=0, shot_seed=0):
     """Registered case, optionally with `empty_cells` blanks and `shots` worked examples.
 
-    With `empty_cells=None` the fixed puzzle is used. With shots, the prompt
-    asks for step-by-step filling so it matches the examples.
+    With `empty_cells=None` the fixed puzzle is used. Shots add examples;
+    the test prompt and final-answer contract are identical with or without them.
     """
     base = prompts[kind][difficulty].data
     data = base if empty_cells is None else with_empty_cells(base, empty_cells, seed)
     return PromptCase(
-        prompt=build_prompt(data, with_steps=shots > 0),
+        prompt=build_prompt(data),
         data=data,
         shots=make_shots(base, data["puzzle"], shots, shot_seed),
     )
