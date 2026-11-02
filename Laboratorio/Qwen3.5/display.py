@@ -26,4 +26,16 @@ def print_result(case, report, result, max_output_tokens, load_seconds, generati
     print(f"[user]\n{case.prompt}")
     print("\nModel output:")
     print(result.text)
+    print("\nVerification checks:")
+    for name, passed in report["checks"].items():
+        status = "OK" if passed is True else "FAIL" if passed is False else "NOT EVALUATED"
+        print(f"  {name}: {status}")
+    correctness = (
+        "NOT EVALUATED" if report["parsed"].grid is None
+        else "CORRECT" if report["solved"] else "INCORRECT"
+    )
+    print(f"Sudoku correctness: {correctness}")
+    for issue in report["parsed"].issues:
+        print(f"Parser issue: {issue}")
+    print(f"Reward: {report['reward']:.1f}")
     print(f"\nResult: {'PASSED' if report['passed'] else 'FAIL'}")
