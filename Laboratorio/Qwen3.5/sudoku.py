@@ -2,6 +2,7 @@
 
 import json
 import random
+import re
 from pathlib import Path
 from string import Formatter
 
@@ -129,6 +130,51 @@ def build_prompt(case: dict) -> str:
             )
 
     return template.format(**values)
+
+
+def task_from_prompt(prompt: str) -> dict:
+    """Recover public task data from the prompt emitted by build_prompt.
+
+    No reference solution is needed by the reward function. Invalid prompts
+    are harness configuration errors, rather than failed model responses.
+    """
+    if not isinstance(prompt, str):
+        raise ValueError("The prompt must be text.")
+    dimensions = re.search(r"\b(\d+)x(\d+) Sudoku\b", prompt)
+    boxes = re.search(r"\bEach (\d+)x(\d+) box\b", prompt)
+    marker = "\nPuzzle:\n"
+    if dimensions is None or boxes is None or prompt.count(marker) != 1:
+        raise ValueError("Expected a Sudoku prompt with dimensions, boxes, and one puzzle.")
+    size, columns = map(int, dimensions.groups())
+    box_rows, box_columns = map(int, boxes.groups())
+    if (
+        size <= 0 or columns != size or box_rows <= 0 or box_columns <= 0
+        or box_rows * box_columns != size
+    ):
+        raise ValueError("Invalid Sudoku dimensions in the prompt.")
+    payload = prompt.split(marker, 1)[1].lstrip()
+    try:
+        puzzle, _ = json.JSONDecoder().raw_decode(payload)
+    except ValueError as error:
+        raise ValueError("The prompt puzzle must be a JSON array.") from error
+    if not _shape_ok(puzzle, size) or any(
+        type(value) is not int or not 0 <= value <= size
+        for row in puzzle for value in row
+    ):
+        raise ValueError("Invalid puzzle shape or values in the prompt.")
+    groups = [*puzzle, *zip(*puzzle)]
+    groups.extend(
+        [puzzle[r][c]
+         for r in range(r0, r0 + box_rows)
+         for c in range(c0, c0 + box_columns)]
+        for r0 in range(0, size, box_rows)
+        for c0 in range(0, size, box_columns)
+    )
+    for group in groups:
+        values = [value for value in group if value]
+        if len(values) != len(set(values)):
+            raise ValueError("The prompt contains conflicting Sudoku clues.")
+    return dict(size=size, box_rows=box_rows, box_columns=box_columns, puzzle=puzzle)
 
 
 def _candidates(grid, r, c, case):
