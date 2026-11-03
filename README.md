@@ -155,6 +155,41 @@ Tests (sin dependencias adicionales):
 python -m unittest discover -s Laboratorio/Qwen3.5 -p "test_*.py"
 ```
 
+## Línea base (pass@1 y pass@k)
+
+`Laboratorio/Qwen3.5/baseline.py` genera `n` respuestas por tarea con
+muestreo (en un solo batch con PyTorch), las puntúa con `reward` y guarda una
+línea JSON por muestra en `results/<modelo>-<thinking|nothinking>.jsonl`.
+Si se interrumpe, al repetir el mismo comando continúa desde donde quedó;
+con otros parámetros de muestreo sobre el mismo archivo, se detiene con un error.
+
+```sh
+python Laboratorio/Qwen3.5/dataset.py --out data/sudoku
+python Laboratorio/Qwen3.5/baseline.py run --tasks data/sudoku/eval.jsonl \
+    --model-id Qwen/Qwen3.5-2B --no-thinking --per-level 5 --n 8
+python Laboratorio/Qwen3.5/baseline.py summary results/*.jsonl --out results/summary.json
+```
+
+| Argumento de `run` | Descripción | Por defecto |
+| --- | --- | --- |
+| `--tasks FILE` | JSONL de `dataset.py` | requerido |
+| `--model-id ID` | Modelo de Hugging Face | `Qwen/Qwen3.5-2B` |
+| `--thinking` / `--no-thinking` | Modo de razonamiento | desactivado |
+| `--n N` | Muestras por tarea | 8 |
+| `--batch-size N` | Muestras generadas a la vez (bajar si falta memoria) | 8 |
+| `--max-output-tokens N` | Límite de tokens por muestra | 2048 |
+| `--temperature`, `--top-p` | Muestreo | 0.7 / 0.8 sin thinking; 0.6 / 0.95 con thinking |
+| `--per-level N` | Primeras N tareas por tamaño y nivel | todas |
+| `--sizes N...` | Filtrar tamaños de tablero | todos |
+| `--seed N` | Semilla del muestreo | 0 |
+| `--out DIR` | Carpeta de resultados | `results` |
+
+`summary` imprime una tabla Markdown por modelo, modo, tamaño y nivel con
+pass@k (estimador insesgado de Chen et al., 2021: `1 - C(n-c, k) / C(n, k)`,
+promediado sobre tareas), el porcentaje de respuestas cortadas por el límite de
+tokens y los tokens promedio. pass@k solo se calcula para tareas con al menos
+`k` muestras.
+
 ## Pendientes
 
 Ver [TODO.md](TODO.md).
