@@ -117,6 +117,44 @@ todas las casillas contra una misma solución. Esta definición admite múltiple
 soluciones, pero requiere una búsqueda de optimización; no se aproxima con la
 cantidad de casillas llenas ni con coincidencias contra una referencia arbitraria.
 
+## Dataset
+
+`Laboratorio/Qwen3.5/dataset.py` genera particiones `train`, `eval` y `test` en
+JSONL, con tableros de 4x4, 6x6 y 9x9 y niveles `easy`, `medium` y `hard` según
+la cantidad de casillas vacías (`LEVELS`; aún no calibrados con el modelo).
+Adapta el generador de Sudoku de Reasoning Gym: crea una solución aleatoria y
+borra casillas una por una, deshaciendo cada borrado que permita una segunda
+solución.
+
+```sh
+python Laboratorio/Qwen3.5/dataset.py --out data/sudoku
+python Laboratorio/Qwen3.5/dataset.py --sizes 9 --train 200 --eval 50 --test 50 --seed 1
+```
+
+| Argumento | Descripción | Por defecto |
+| --- | --- | --- |
+| `--out DIR` | Carpeta de salida | `data/sudoku` |
+| `--sizes N...` | Tamaños de tablero (4, 6, 9) | `4 6 9` |
+| `--train/--eval/--test N` | Tareas por tamaño y nivel | 50 / 10 / 10 |
+| `--seed N` | Semilla del dataset | 0 |
+| `--unique` / `--no-unique` | Exigir solución única | exigida |
+
+Cada línea contiene `id`, `split`, `size`, `box_rows`, `box_columns`, `level`,
+`empty_cells` (contadas en el puzzle generado), `unique_solution`,
+`deducible_by_singles` (si se resuelve llenando solo casillas con un único
+candidato), `prompt` (de `build_prompt`), `puzzle` y `solution`. Cada tarea usa
+su propia semilla, por lo que los mismos argumentos producen los mismos
+archivos; ningún puzzle se repite entre particiones, y aumentar `--train` no
+cambia `eval` ni `test`. `reward(record["prompt"], respuesta)` funciona
+directamente, y `case_from_record(record)` entrega un `PromptCase` para
+`evaluate` y `print_result`.
+
+Tests (sin dependencias adicionales):
+
+```sh
+python -m unittest discover -s Laboratorio/Qwen3.5 -p "test_*.py"
+```
+
 ## Pendientes
 
 Ver [TODO.md](TODO.md).
