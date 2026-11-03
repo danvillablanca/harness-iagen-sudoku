@@ -100,41 +100,8 @@ class Qwen:
         `shots` is a sequence of (user, assistant) example turns placed
         before the prompt.
         """
-        max_tokens = self.config.max_output_tokens if max_tokens is None else max_tokens
-        enable_thinking = self.config.thinking if enable_thinking is None else enable_thinking
-
-        if not isinstance(prompt, str) or not prompt.strip():
-            raise ValueError("Provide a nonempty text prompt.")
-
-        if type(max_tokens) is not int or max_tokens < 1:
-            raise ValueError(
-                "max_tokens must be a positive integer."
-            )
-
-        if type(enable_thinking) is not bool:
-            raise ValueError("enable_thinking must be True or False.")
-
-        messages = []
-        for user_text, assistant_text in shots:
-            messages.append({"role": "user", "content": user_text})
-            messages.append({"role": "assistant", "content": assistant_text})
-        messages.append({"role": "user", "content": prompt})
-
-        tokens = self.tokenizer.apply_chat_template(
-            messages,
-            tokenize=True,
-            return_dict=False,
-            add_generation_prompt=True,
-            enable_thinking=enable_thinking,
-        )
-
+        tokens, max_tokens = self._prompt_ids(prompt, max_tokens, enable_thinking, shots)
         prompt_tokens = len(tokens)
-
-        if prompt_tokens > self.config.max_prompt_tokens:
-            raise ValueError(
-                f"The prompt contains {prompt_tokens} tokens; "
-                f"the limit is {self.config.max_prompt_tokens}."
-            )
 
         if self.backend == "mlx":
             import mlx.core as mx
@@ -192,10 +159,140 @@ class Qwen:
                 return_dict_in_generate=False,
             )
 
-        # Count actual continuation IDs before decoding removes special tokens.
-        continuation_ids = output[0, prompt_tokens:].tolist()
-        generated_tokens = len(continuation_ids)
+        return self._torch_result(
+            output[0, prompt_tokens:].tolist(), prompt_tokens, max_tokens
+        )
 
+    def generate_samples(
+        self,
+        prompt: str,
+        n: int,
+        *,
+        temperature: float,
+        top_p: float = 1.0,
+        max_tokens: int | None = None,
+        enable_thinking: bool | None = None,
+        shots: tuple = (),
+        seed: int | None = None,
+    ) -> list[GenerationResult]:
+        """Return `n` sampled completions of one prompt, for pass@k.
+
+        PyTorch generates the samples as one batch; MLX generates them
+        one after another. `seed` makes a run repeatable on the same
+        hardware and library versions.
+        """
+        if type(n) is not int or n < 1:
+            raise ValueError("n must be a positive integer.")
+        if not temperature > 0:
+            raise ValueError("temperature must be positive; use generate_with_stats for greedy.")
+        if not 0 < top_p <= 1:
+            raise ValueError("top_p must be in (0, 1].")
+
+        tokens, max_tokens = self._prompt_ids(prompt, max_tokens, enable_thinking, shots)
+        prompt_tokens = len(tokens)
+
+        if self.backend == "mlx":
+            import mlx.core as mx
+            from mlx_lm import stream_generate
+            from mlx_lm.sample_utils import make_sampler
+
+            if seed is not None:
+                mx.random.seed(seed)
+            results = []
+            for _ in range(n):
+                parts = []
+                last_chunk = None
+                with mx.stream(mx.gpu):
+                    for chunk in stream_generate(
+                        self.model,
+                        self.tokenizer,
+                        prompt=tokens,
+                        max_tokens=max_tokens,
+                        sampler=make_sampler(temp=temperature, top_p=top_p),
+                    ):
+                        parts.append(chunk.text)
+                        last_chunk = chunk
+                if last_chunk is None:
+                    raise RuntimeError("MLX returned no generation output.")
+                results.append(GenerationResult(
+                    text="".join(parts),
+                    prompt_tokens=prompt_tokens,
+                    generated_tokens=int(last_chunk.generation_tokens),
+                    finish_reason=getattr(last_chunk, "finish_reason", None),
+                    backend=self.backend,
+                ))
+            return results
+
+        import torch
+
+        if seed is not None:
+            torch.manual_seed(seed)
+
+        inputs = torch.tensor([tokens], dtype=torch.long, device=self.backend)
+
+        pad_id = self.tokenizer.pad_token_id
+        if pad_id is None:
+            pad_id = self.tokenizer.eos_token_id
+
+        with torch.inference_mode():
+            output = self.model.generate(
+                input_ids=inputs,
+                attention_mask=torch.ones_like(inputs),
+                max_new_tokens=max_tokens,
+                do_sample=True,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=None,
+                num_return_sequences=n,
+                pad_token_id=pad_id,
+                return_dict_in_generate=False,
+            )
+
+        return [
+            self._torch_result(row[prompt_tokens:].tolist(), prompt_tokens, max_tokens)
+            for row in output
+        ]
+
+    def _prompt_ids(self, prompt, max_tokens, enable_thinking, shots):
+        """Validate options and return (prompt token IDs, max_tokens)."""
+        max_tokens = self.config.max_output_tokens if max_tokens is None else max_tokens
+        enable_thinking = self.config.thinking if enable_thinking is None else enable_thinking
+
+        if not isinstance(prompt, str) or not prompt.strip():
+            raise ValueError("Provide a nonempty text prompt.")
+
+        if type(max_tokens) is not int or max_tokens < 1:
+            raise ValueError(
+                "max_tokens must be a positive integer."
+            )
+
+        if type(enable_thinking) is not bool:
+            raise ValueError("enable_thinking must be True or False.")
+
+        messages = []
+        for user_text, assistant_text in shots:
+            messages.append({"role": "user", "content": user_text})
+            messages.append({"role": "assistant", "content": assistant_text})
+        messages.append({"role": "user", "content": prompt})
+
+        tokens = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=True,
+            return_dict=False,
+            add_generation_prompt=True,
+            enable_thinking=enable_thinking,
+        )
+
+        if len(tokens) > self.config.max_prompt_tokens:
+            raise ValueError(
+                f"The prompt contains {len(tokens)} tokens; "
+                f"the limit is {self.config.max_prompt_tokens}."
+            )
+
+        return tokens, max_tokens
+
+    def _torch_result(self, continuation_ids, prompt_tokens, max_tokens):
+        """GenerationResult from the token IDs PyTorch produced after the prompt."""
         eos_ids = self.model.generation_config.eos_token_id
         if eos_ids is None:
             eos_ids = set()
@@ -203,6 +300,15 @@ class Qwen:
             eos_ids = {eos_ids}
         else:
             eos_ids = set(eos_ids)
+
+        # In a batch, sequences that stop early are padded up to the longest
+        # one; keep only the tokens up to and including the first EOS.
+        for position, token in enumerate(continuation_ids):
+            if token in eos_ids:
+                continuation_ids = continuation_ids[:position + 1]
+                break
+        # Count actual continuation IDs before decoding removes special tokens.
+        generated_tokens = len(continuation_ids)
 
         ended_with_eos = (
             bool(continuation_ids)

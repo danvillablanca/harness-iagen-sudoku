@@ -261,6 +261,32 @@ def is_deducible(puzzle: list[list[int]], case: dict) -> bool:
             return False
 
 
+def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
+    """Number of valid completions of `puzzle`, counting at most `limit`.
+
+    With the default limit, 1 means the solution is unique and 2 means
+    there are at least two."""
+    grid = [row[:] for row in puzzle]
+    found = 0
+
+    def search():
+        nonlocal found
+        best = _most_constrained_cell(grid, case)
+        if best is None:
+            found += 1
+            return
+        r, c, options = best
+        for value in options:
+            grid[r][c] = value
+            search()
+            grid[r][c] = 0
+            if found >= limit:
+                return
+
+    search()
+    return min(found, limit)
+
+
 MAX_BLANKING_ATTEMPTS = 1000
 
 
