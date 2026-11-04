@@ -1,0 +1,141 @@
+{
+  "checked_local": "2026-11-04T08:11:00.301387-03:00",
+  "dataset": {
+    "tasks": {
+      "train": 450,
+      "eval": 90,
+      "test": 90
+    },
+    "by_level": {
+      "train": {
+        "4x4/easy": 50,
+        "4x4/medium": 50,
+        "4x4/hard": 50,
+        "6x6/easy": 50,
+        "6x6/medium": 50,
+        "6x6/hard": 50,
+        "9x9/easy": 50,
+        "9x9/medium": 50,
+        "9x9/hard": 50
+      },
+      "eval": {
+        "4x4/easy": 10,
+        "4x4/medium": 10,
+        "4x4/hard": 10,
+        "6x6/easy": 10,
+        "6x6/medium": 10,
+        "6x6/hard": 10,
+        "9x9/easy": 10,
+        "9x9/medium": 10,
+        "9x9/hard": 10
+      },
+      "test": {
+        "4x4/easy": 10,
+        "4x4/medium": 10,
+        "4x4/hard": 10,
+        "6x6/easy": 10,
+        "6x6/medium": 10,
+        "6x6/hard": 10,
+        "9x9/easy": 10,
+        "9x9/medium": 10,
+        "9x9/hard": 10
+      }
+    },
+    "exact_overlap": 0,
+    "references_verified": 630,
+    "limitation": "Exact duplicate check; Sudoku symmetry classes are not excluded."
+  },
+  "teacher": {
+    "model": "mlx-community/Qwen3.5-9B-4bit",
+    "samples": 3600,
+    "samples_planned": 3600,
+    "complete": true,
+    "sft": 161,
+    "dpo": 600,
+    "sft_tasks": 161,
+    "dpo_tasks": 137,
+    "reverified": true,
+    "macro_pass_at_k_on_train": {
+      "1": 0.15722222222222224,
+      "2": 0.21666666666666667,
+      "4": 0.28514285714285714,
+      "8": 0.35777777777777775
+    },
+    "duplicates": 0,
+    "seeds_verified": true,
+    "by_level": {
+      "4x4/easy": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 251,
+        "sft": 47,
+        "dpo": 79
+      },
+      "4x4/medium": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 121,
+        "sft": 33,
+        "dpo": 126
+      },
+      "4x4/hard": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 43,
+        "sft": 25,
+        "dpo": 147
+      },
+      "6x6/easy": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 71,
+        "sft": 24,
+        "dpo": 94
+      },
+      "6x6/medium": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 29,
+        "sft": 14,
+        "dpo": 73
+      },
+      "6x6/hard": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 0,
+        "sft": 0,
+        "dpo": 0
+      },
+      "9x9/easy": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 50,
+        "sft": 17,
+        "dpo": 74
+      },
+      "9x9/medium": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 1,
+        "sft": 1,
+        "dpo": 7
+      },
+      "9x9/hard": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 0,
+        "sft": 0,
+        "dpo": 0
+      }
+    }
+  }
+}

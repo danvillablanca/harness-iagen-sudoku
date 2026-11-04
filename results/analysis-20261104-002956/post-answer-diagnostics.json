@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "truncated_total": 973,
+    "truncated_with_closed_answer": 882,
+    "truncated_with_text_after_first_answer": 882,
+    "truncated_self_correction_language": 970,
+    "rejected_with_any_correct_answer_block": 19
+  },
+  "additional_tasks_with_embedded_correct_block": [
+    "train-4x4-easy-00012",
+    "train-4x4-medium-00016",
+    "train-4x4-medium-00029"
+  ],
+  "method": "Diagnostic only: score each complete answer block independently. Actual verifier still scores the entire original response; no rejected example was promoted to SFT."
+}

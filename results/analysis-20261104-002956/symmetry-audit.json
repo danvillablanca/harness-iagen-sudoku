@@ -1,0 +1,64 @@
+{
+  "scope": "4x4 only; train/eval only; no model evaluations and no dataset changes",
+  "transformations": "digit renaming; row swaps within bands; band swaps; column swaps within stacks; stack swaps; transpose",
+  "caveat": "Structural equivalence does not prove memorization or performance inflation; it limits claims of structurally unseen evaluation tasks.",
+  "by_level": {
+    "easy": {
+      "train_tasks": 50,
+      "train_classes": 49,
+      "sft_tasks": 47,
+      "sft_classes": 46,
+      "eval_tasks": 10,
+      "eval_classes": 10,
+      "eval_tasks_equivalent_to_train": 0,
+      "eval_tasks_equivalent_to_sft": 0
+    },
+    "medium": {
+      "train_tasks": 50,
+      "train_classes": 50,
+      "sft_tasks": 33,
+      "sft_classes": 33,
+      "eval_tasks": 10,
+      "eval_classes": 10,
+      "eval_tasks_equivalent_to_train": 0,
+      "eval_tasks_equivalent_to_sft": 0
+    },
+    "hard": {
+      "train_tasks": 50,
+      "train_classes": 43,
+      "sft_tasks": 25,
+      "sft_classes": 24,
+      "eval_tasks": 10,
+      "eval_classes": 10,
+      "eval_tasks_equivalent_to_train": 3,
+      "eval_tasks_equivalent_to_sft": 2
+    }
+  },
+  "examples": [
+    {
+      "eval_task": "eval-4x4-hard-00000",
+      "train_task": "train-4x4-hard-00034",
+      "matching_train_tasks_in_sft": [
+        "train-4x4-hard-00034"
+      ],
+      "canonical_grid": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        2,
+        3,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

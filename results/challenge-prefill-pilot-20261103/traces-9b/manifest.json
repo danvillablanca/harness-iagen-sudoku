@@ -1,0 +1,103 @@
+{
+  "schema": 2,
+  "input_sha256": "f7bc1d02af3eed7a0c076f916cac19b84f95aa986d4dbc5f50e9563d8dc7015e",
+  "tasks": [
+    {
+      "id": "train-4x4-easy-00000",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 4, 0],\n  [0, 0, 0, 2],\n  [2, 3, 1, 4],\n  [0, 1, 2, 3]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 4,
+      "level": "easy"
+    },
+    {
+      "id": "train-4x4-medium-00000",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 4, 0, 0],\n  [1, 0, 2, 4],\n  [3, 0, 4, 0],\n  [4, 2, 1, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 4,
+      "level": "medium"
+    },
+    {
+      "id": "train-4x4-hard-00000",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [2, 0, 0, 0],\n  [0, 4, 0, 3],\n  [0, 0, 0, 0],\n  [0, 2, 4, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 4,
+      "level": "hard"
+    },
+    {
+      "id": "train-6x6-easy-00000",
+      "prompt": "Solve the following 6x6 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 6.\n- Each row must contain the numbers 1 through 6 exactly once.\n- Each column must contain the numbers 1 through 6 exactly once.\n- Each 2x3 box must contain 1 through 6 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 4, 5, 6, 3],\n  [5, 6, 3, 2, 0, 1],\n  [2, 1, 6, 4, 0, 5],\n  [0, 0, 0, 1, 2, 6],\n  [3, 5, 2, 6, 0, 4],\n  [0, 4, 0, 3, 5, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 6,
+      "level": "easy"
+    },
+    {
+      "id": "train-6x6-medium-00000",
+      "prompt": "Solve the following 6x6 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 6.\n- Each row must contain the numbers 1 through 6 exactly once.\n- Each column must contain the numbers 1 through 6 exactly once.\n- Each 2x3 box must contain 1 through 6 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [5, 0, 0, 6, 0, 0],\n  [1, 0, 0, 3, 0, 5],\n  [0, 0, 0, 1, 0, 0],\n  [3, 1, 0, 2, 0, 6],\n  [4, 6, 3, 5, 0, 2],\n  [0, 0, 1, 4, 0, 3]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 6,
+      "level": "medium"
+    },
+    {
+      "id": "train-6x6-hard-00000",
+      "prompt": "Solve the following 6x6 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 6.\n- Each row must contain the numbers 1 through 6 exactly once.\n- Each column must contain the numbers 1 through 6 exactly once.\n- Each 2x3 box must contain 1 through 6 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 0, 0, 0, 2, 0],\n  [2, 0, 3, 0, 1, 0],\n  [0, 5, 0, 0, 0, 1],\n  [0, 2, 0, 4, 0, 0],\n  [4, 0, 0, 0, 0, 0],\n  [1, 6, 0, 0, 0, 3]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 6,
+      "level": "hard"
+    },
+    {
+      "id": "train-9x9-easy-00000",
+      "prompt": "Solve the following 9x9 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 9.\n- Each row must contain the numbers 1 through 9 exactly once.\n- Each column must contain the numbers 1 through 9 exactly once.\n- Each 3x3 box must contain 1 through 9 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [6, 1, 7, 2, 4, 8, 3, 9, 5],\n  [2, 5, 4, 9, 1, 0, 6, 8, 7],\n  [8, 3, 9, 5, 6, 0, 1, 4, 2],\n  [7, 4, 5, 6, 2, 9, 8, 1, 3],\n  [3, 6, 8, 0, 7, 5, 4, 2, 0],\n  [1, 9, 2, 3, 8, 0, 5, 0, 6],\n  [5, 7, 1, 4, 9, 6, 2, 3, 8],\n  [0, 2, 0, 8, 0, 1, 7, 6, 4],\n  [4, 8, 6, 0, 3, 2, 9, 5, 1]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 9,
+      "level": "easy"
+    },
+    {
+      "id": "train-9x9-medium-00000",
+      "prompt": "Solve the following 9x9 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 9.\n- Each row must contain the numbers 1 through 9 exactly once.\n- Each column must contain the numbers 1 through 9 exactly once.\n- Each 3x3 box must contain 1 through 9 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 1, 0, 5, 7, 3, 4, 0, 0],\n  [5, 8, 3, 4, 0, 0, 1, 0, 7],\n  [7, 0, 4, 0, 6, 0, 2, 5, 0],\n  [3, 4, 1, 0, 0, 5, 7, 9, 8],\n  [0, 0, 7, 9, 1, 0, 3, 2, 0],\n  [6, 0, 0, 3, 8, 0, 5, 4, 1],\n  [0, 7, 2, 1, 5, 8, 6, 3, 4],\n  [4, 6, 5, 0, 0, 9, 0, 1, 2],\n  [1, 3, 0, 0, 0, 0, 9, 0, 5]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 9,
+      "level": "medium"
+    },
+    {
+      "id": "train-9x9-hard-00000",
+      "prompt": "Solve the following 9x9 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 9.\n- Each row must contain the numbers 1 through 9 exactly once.\n- Each column must contain the numbers 1 through 9 exactly once.\n- Each 3x3 box must contain 1 through 9 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 0, 3, 0, 0, 0, 0, 6, 2],\n  [0, 4, 0, 8, 0, 0, 3, 0, 0],\n  [0, 6, 0, 0, 1, 5, 7, 8, 0],\n  [1, 0, 0, 0, 0, 0, 0, 0, 0],\n  [0, 0, 5, 0, 3, 0, 9, 0, 1],\n  [0, 3, 0, 2, 9, 1, 0, 0, 0],\n  [0, 0, 7, 0, 6, 9, 0, 3, 8],\n  [0, 0, 8, 0, 7, 3, 0, 0, 9],\n  [3, 0, 9, 0, 8, 2, 0, 5, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "size": 9,
+      "level": "hard"
+    }
+  ],
+  "model_config": {
+    "model_id": "mlx-community/Qwen3.5-9B-4bit",
+    "thinking": false,
+    "max_output_tokens": 1024,
+    "max_prompt_tokens": 2048,
+    "backend": "mlx",
+    "answer_prefix": true
+  },
+  "k": 4,
+  "temperature": 0.7,
+  "top_p": 0.8,
+  "seed": 42,
+  "top_k": 20,
+  "presence_penalty": 1.5,
+  "filter": "reward(prompt, raw completion) == 1; final board and format only",
+  "pairing": "first unique accepted with every unique rejected of same task",
+  "export_transform": "restore opening <think> when generated continuation contains only closing marker",
+  "provenance": {
+    "python": "3.13.12",
+    "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "packages": {
+      "torch": "2.13.0",
+      "transformers": "5.18.0",
+      "mlx": "0.32.0",
+      "mlx-lm": "0.31.3",
+      "huggingface-hub": "1.33.0"
+    },
+    "cached_model_revision": "8b2b98c00a6b4d291155e4890773ca8f769aee53",
+    "git_commit": "dd1e2956880022eecbb93a765414ce58f4524769",
+    "code_sha256": {
+      "qwen.py": "755672407df4011492164ecfdb7aec4ac0294891e942bf154cc5b4e7f1c359da",
+      "models.py": "3512a0a0aab372095c73e03622388288e6276f2f2cdcf66581daf500d41b610b",
+      "config.py": "008082b75d8ffae464ac0205259a0b81834926da36c4fb12791397c03f405d64",
+      "sudoku.py": "a7e3a68db912667abec9f6405876e3747c28b47e2556e634261a1f6589f57824",
+      "response_parser.py": "0eda4bb1b3e2161e8d55d8f4ba98b6931d942a85988eb7cf7334bf7b73a8cbea",
+      "evaluation.py": "33e6f8ef12c0aee90dc0ba95999903dc1cdaa512c0e144b607f02fc200ea22f7",
+      "reward.py": "2b82c5fd6ff2caa3068e5222d45e0e3f91dc422e639ba772126990916450e1ff",
+      "experiment.py": "20a1a98475081e6d23f5d16204b3c678743369abc8abe7d3f2c0b5964ff5f1db",
+      "baseline.py": "a83a3fdedf46cf4479336ed5cfeb073251eb0682ffd5cd88c0a59a68563965a7",
+      "traces.py": "1860f2be650bc070a83e37a859ac2cfd400f44e6ec02bd8762dc303d4a641cf3"
+    }
+  },
+  "run_id": "46470465094dffa883f266fab72b6ddd431fd99d56477f421200d20068d4818b"
+}

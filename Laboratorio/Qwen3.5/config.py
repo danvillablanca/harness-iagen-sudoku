@@ -15,6 +15,7 @@ class ModelConfig:
     max_output_tokens: int = 2048
     max_prompt_tokens: int = 2048
     backend: str = "auto"
+    answer_prefix: bool = False
 
     def __post_init__(self):
         if not isinstance(self.model_id, str) or not self.model_id.strip():
@@ -23,6 +24,8 @@ class ModelConfig:
             raise ValueError("backend must be auto, mlx, cuda, mps, or cpu.")
         if type(self.thinking) is not bool:
             raise ValueError("thinking must be True or False.")
+        if type(self.answer_prefix) is not bool or (self.answer_prefix and self.thinking):
+            raise ValueError("answer_prefix must be bool and requires thinking=False.")
         if type(self.max_output_tokens) is not int or self.max_output_tokens < 1:
             raise ValueError("max_output_tokens must be a positive integer.")
         if type(self.max_prompt_tokens) is not int or self.max_prompt_tokens < 1:

@@ -1,0 +1,4 @@
+{
+  "status": "interrupted",
+  "reason": "Greedy pilot exhausted 8192 tokens repeating verification; switching both teachers to the same documented sampled decoding configuration."
+}

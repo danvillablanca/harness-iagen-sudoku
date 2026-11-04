@@ -1,0 +1,27 @@
+{
+  "created_utc": "2026-11-03T04:55:09.123773+00:00",
+  "models": {
+    "9b": "mlx-community/Qwen3.5-9B-4bit",
+    "27b": "mlx-community/Qwen3.5-27B-4bit"
+  },
+  "seed": 42,
+  "cases_per_level": 10,
+  "empty_cells": [
+    10,
+    20,
+    40
+  ],
+  "thinking": true,
+  "max_output_tokens": 8192,
+  "max_prompt_tokens": 2048,
+  "decoding": "sampled",
+  "sampling": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "presence_penalty": 1.5
+  },
+  "generation_seed": "(dataset seed + one-based task index) modulo 2**32",
+  "shots": 0,
+  "note": "Empty-cell groups are not calibrated difficulty levels. One attempt per task. 2B uses original weights; 9B and 27B use 4-bit weights. Differences reflect both model size and weight precision."
+}

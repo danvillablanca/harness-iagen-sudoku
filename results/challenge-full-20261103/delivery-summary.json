@@ -1,0 +1,131 @@
+{
+  "prepared_at": "2026-11-04T11:09:34-03:00",
+  "run": "results/challenge-full-20261103",
+  "status": "complete",
+  "weights_trained": false,
+  "test_evaluated_by_models": false,
+  "total_generated_samples": 5040,
+  "teacher": {
+    "samples": 3600,
+    "tasks_completed": 450,
+    "accepted_samples": 566,
+    "token_limit_reached": 1197,
+    "sft_records": 161,
+    "dpo_pairs": 600,
+    "tasks_with_sft": 161,
+    "tasks_with_dpo": 137,
+    "by_level": {
+      "4x4/easy": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 251,
+        "sft": 47,
+        "dpo": 79
+      },
+      "4x4/medium": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 121,
+        "sft": 33,
+        "dpo": 126
+      },
+      "4x4/hard": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 43,
+        "sft": 25,
+        "dpo": 147
+      },
+      "6x6/easy": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 71,
+        "sft": 24,
+        "dpo": 94
+      },
+      "6x6/medium": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 29,
+        "sft": 14,
+        "dpo": 73
+      },
+      "6x6/hard": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 0,
+        "sft": 0,
+        "dpo": 0
+      },
+      "9x9/easy": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 50,
+        "sft": 17,
+        "dpo": 74
+      },
+      "9x9/medium": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 1,
+        "sft": 1,
+        "dpo": 7
+      },
+      "9x9/hard": {
+        "tasks": 50,
+        "completed": 50,
+        "samples": 400,
+        "accepted": 0,
+        "sft": 0,
+        "dpo": 0
+      }
+    }
+  },
+  "macro_eval": [
+    {
+      "model": "Qwen/Qwen3.5-2B",
+      "tasks": 90,
+      "samples": 720,
+      "accepted_samples": 50,
+      "tasks_with_success": 14,
+      "pass@1": 0.06944444444444445,
+      "pass@2": 0.09325396825396826,
+      "pass@4": 0.12301587301587301,
+      "pass@8": 0.15555555555555556,
+      "token_limit_reached": 5,
+      "format_failures": 19
+    },
+    {
+      "model": "mlx-community/Qwen3.5-9B-4bit",
+      "tasks": 90,
+      "samples": 720,
+      "accepted_samples": 124,
+      "tasks_with_success": 36,
+      "pass@1": 0.17222222222222222,
+      "pass@2": 0.24285714285714285,
+      "pass@4": 0.32666666666666666,
+      "pass@8": 0.4,
+      "token_limit_reached": 268,
+      "format_failures": 272
+    }
+  ],
+  "duplicate_attempts": 0,
+  "audit_file": "delivery-audit.json",
+  "limitations": [
+    "No weight training or post-training comparison; data collection and baseline inference only.",
+    "No-thinking with answer prefix: accepted SFT examples contain final boards, not step-by-step reasoning.",
+    "DPO labels are synthetic verifier preferences, not human preference annotations.",
+    "No accepted teacher candidates for 6x6/hard or 9x9/hard; only one for 9x9/medium.",
+    "Only ten eval tasks per size/difficulty; observed rates have sampling uncertainty.",
+    "2B original versus 9B 4-bit changes both size and precision.",
+    "No exact puzzle overlap; 4x4 symmetry audit finds 3/10 hard eval tasks equivalent to train, 2/10 to SFT."
+  ]
+}

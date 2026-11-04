@@ -13,6 +13,7 @@ produce the same files. Run from the repository root:
 """
 
 import argparse
+import hashlib
 import json
 import random
 from pathlib import Path
@@ -133,8 +134,26 @@ def generate(counts, sizes=(4, 6, 9), seed=0, unique=True):
     return dataset
 
 
+def response_style(dataset, style):
+    """Keep puzzles fixed while choosing a documented output-length instruction."""
+    if style not in ('reasoning', 'final'):
+        raise ValueError('Unknown response style')
+    if style == 'final':
+        for records in dataset.values():
+            for record in records:
+                record['prompt'] = record['prompt'].replace(
+                    'Check all rows, columns, boxes, and original clues before answering.',
+                    'Check your answer silently.').replace(
+                    'You may explain your reasoning and show intermediate grids before the final answer.',
+                    'Return ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.')
+                record['response_style'] = style
+    return dataset
+
+
 def save(dataset, out_dir):
     out_dir = Path(out_dir)
+    if any((out_dir / f'{split}.jsonl').exists() for split in dataset):
+        raise ValueError('Dataset files already exist; choose a new output directory.')
     out_dir.mkdir(parents=True, exist_ok=True)
     for split, records in dataset.items():
         with (out_dir / f"{split}.jsonl").open("w", encoding="utf-8") as handle:
@@ -173,6 +192,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--test", type=int, default=10,
                         help="test tasks per size and level")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument('--response-style', choices=['reasoning', 'final'], default='reasoning')
     parser.add_argument(
         "--unique",
         action=argparse.BooleanOptionalAction,
@@ -187,8 +207,15 @@ def main() -> int:
     counts = {"train": args.train, "eval": args.eval, "test": args.test}
     if any(count < 0 for count in counts.values()):
         raise SystemExit("Task counts must be >= 0.")
-    dataset = generate(counts, args.sizes, args.seed, args.unique)
+    dataset = response_style(generate(counts, args.sizes, args.seed, args.unique), args.response_style)
     save(dataset, args.out)
+    manifest = {'seed': args.seed, 'sizes': args.sizes, 'counts_per_group': counts,
+                'unique': args.unique, 'response_style': args.response_style,
+                'generator_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                'files': {split: {'tasks': len(records), 'sha256': hashlib.sha256(
+                    (Path(args.out) / f'{split}.jsonl').read_bytes()).hexdigest()}
+                          for split, records in dataset.items()}}
+    (Path(args.out) / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     for split, records in dataset.items():
         print(f"{split}: {len(records)} tasks -> {Path(args.out) / f'{split}.jsonl'}")
     return 0

@@ -1,0 +1,2 @@
+#!/bin/zsh
+exec '/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafío Grupal/harness-iagen-sudoku/.venv/bin/python' '/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafío Grupal/harness-iagen-sudoku/Laboratorio/Qwen3.5/progress.py' --run '/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafío Grupal/harness-iagen-sudoku/results/challenge-full-20261103'

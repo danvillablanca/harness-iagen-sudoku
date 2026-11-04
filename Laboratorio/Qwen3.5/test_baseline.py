@@ -11,7 +11,8 @@ from baseline import RUN_KEYS, pass_at_k, pending, select_tasks, summarize
 from config import ModelConfig
 
 SETTINGS = {"model": "m", "thinking": False, "temperature": 0.7, "top_p": 0.8,
-            "max_tokens": 64, "n": 4, "seed": 0}
+            "max_tokens": 64, "n": 4, "seed": 0, "top_k": 20, "presence_penalty": 1.5,
+            "backend": "cpu", "max_prompt_tokens": 2048, "answer_prefix": False}
 
 
 def sample(task_id, index, reward, size=4, level="easy", finish="stop", tokens=10):
@@ -81,8 +82,10 @@ class SummaryTest(unittest.TestCase):
         self.assertAlmostEqual(easy["pass@4"], (1.0 + 0.0) / 2)
         self.assertAlmostEqual(easy["truncated"], 0.5)
         self.assertAlmostEqual(easy["avg_tokens"], 37.0)
-        # Only 2 samples: pass@4 cannot be estimated.
-        self.assertEqual(rows[9, "hard"]["pass@1"], 1.0)
+        # Only 2 of the planned 4 samples: this task is incomplete, not scored yet.
+        self.assertIsNone(rows[9, "hard"]["pass@1"])
+        self.assertTrue(rows[9, "hard"]["provisional"])
+        self.assertEqual(rows[9, "hard"]["tasks"], 0)
         self.assertIsNone(rows[9, "hard"]["pass@4"])
 
 

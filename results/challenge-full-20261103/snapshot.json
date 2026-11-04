@@ -1,0 +1,88 @@
+{
+  "created_utc": "2026-11-03T09:39:18.345914+00:00",
+  "source_commit": "dd1e2956880022eecbb93a765414ce58f4524769",
+  "source_checkout": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafi\u0301o Grupal/harness-iagen-sudoku",
+  "source_hashes_original": {
+    "audit.py": "e8bbcef096a4acf1dfb8a4847f58ec6686c9c174cfe762fba1b71deeabf8658a",
+    "baseline.py": "a83a3fdedf46cf4479336ed5cfeb073251eb0682ffd5cd88c0a59a68563965a7",
+    "challenge.py": "86a24144ccdd55efb473de6416220d3573ef029b0853e54dee14178be4c995f4",
+    "compare_models.py": "f913162e7863b244f6a9f9f912514640a6dcec5f50b824b4f2ceaefc2495a557",
+    "config.py": "008082b75d8ffae464ac0205259a0b81834926da36c4fb12791397c03f405d64",
+    "dataset.py": "b3452da21da59c158bea4302fad83da0288c199d9dec68ab46b10910cde07145",
+    "display.py": "04517bd7e926912be5a3b46e7a4d36b253bf24b21e0f53434a8361f58781136b",
+    "evaluation.py": "33e6f8ef12c0aee90dc0ba95999903dc1cdaa512c0e144b607f02fc200ea22f7",
+    "experiment.py": "20a1a98475081e6d23f5d16204b3c678743369abc8abe7d3f2c0b5964ff5f1db",
+    "main.py": "e2b883f8789f8bef1e0e80afb4e4b351b3d76c88ea97fdb369b22ee0a42a60c2",
+    "models.py": "3512a0a0aab372095c73e03622388288e6276f2f2cdcf66581daf500d41b610b",
+    "prompts.py": "fff1c2d85a592abb37d89b8412153503b93cc4316f3e698703fa6be3ad0398ee",
+    "qwen.py": "755672407df4011492164ecfdb7aec4ac0294891e942bf154cc5b4e7f1c359da",
+    "response_parser.py": "0eda4bb1b3e2161e8d55d8f4ba98b6931d942a85988eb7cf7334bf7b73a8cbea",
+    "reward.py": "2b82c5fd6ff2caa3068e5222d45e0e3f91dc422e639ba772126990916450e1ff",
+    "sudoku.json": "df14ea3c062446f2290efc1fc05228aa8fe20bbb6dc811fd246b52428b641a2a",
+    "sudoku.py": "a7e3a68db912667abec9f6405876e3747c28b47e2556e634261a1f6589f57824",
+    "test_baseline.py": "c9a2c662adca8f811fe4444e6578e07fcc6080f68301ef38eb5fcc725fdf35b6",
+    "test_compare_models.py": "7393663dcf06af5c98c7b219c273de21c20aaad6ec15f4ad731d7a9f9204cc91",
+    "test_dataset.py": "0dc69c5c0c831c0ee6a166903599a03825e219f44d79933a80dd51efc7a5f4a0",
+    "test_experiment.py": "b7f710c382ab22475840213c6cae4abe2cce2697b5111505095f68ea3a9fbd02",
+    "test_reward.py": "bc2ee194d33936289954a1a37da44b2f3f43b93150e8b15ec81a803c56d9acaa",
+    "test_sampling.py": "01688a2a45ff092dfa65e00e711eac752968dd46a57ba240c46be9f125b1b7e1",
+    "test_traces.py": "c935bd245ca1b9dd24ded9728ab557024e46f765ec87ddd931dfd81e25a179f5",
+    "timing.py": "d45bd550b413b4abe148c7334e9000b9b87f39651ca0d772987650fb36e15187",
+    "traces.py": "1860f2be650bc070a83e37a859ac2cfd400f44e6ec02bd8762dc303d4a641cf3"
+  },
+  "source_hashes_frozen": {
+    "config.py": "008082b75d8ffae464ac0205259a0b81834926da36c4fb12791397c03f405d64",
+    "audit.py": "e8bbcef096a4acf1dfb8a4847f58ec6686c9c174cfe762fba1b71deeabf8658a",
+    "models.py": "3512a0a0aab372095c73e03622388288e6276f2f2cdcf66581daf500d41b610b",
+    "baseline.py": "a83a3fdedf46cf4479336ed5cfeb073251eb0682ffd5cd88c0a59a68563965a7",
+    "test_experiment.py": "b7f710c382ab22475840213c6cae4abe2cce2697b5111505095f68ea3a9fbd02",
+    "evaluation.py": "33e6f8ef12c0aee90dc0ba95999903dc1cdaa512c0e144b607f02fc200ea22f7",
+    "test_traces.py": "c935bd245ca1b9dd24ded9728ab557024e46f765ec87ddd931dfd81e25a179f5",
+    "test_reward.py": "bc2ee194d33936289954a1a37da44b2f3f43b93150e8b15ec81a803c56d9acaa",
+    "test_compare_models.py": "7393663dcf06af5c98c7b219c273de21c20aaad6ec15f4ad731d7a9f9204cc91",
+    "test_baseline.py": "c9a2c662adca8f811fe4444e6578e07fcc6080f68301ef38eb5fcc725fdf35b6",
+    "display.py": "04517bd7e926912be5a3b46e7a4d36b253bf24b21e0f53434a8361f58781136b",
+    "prompts.py": "fff1c2d85a592abb37d89b8412153503b93cc4316f3e698703fa6be3ad0398ee",
+    "sudoku.json": "df14ea3c062446f2290efc1fc05228aa8fe20bbb6dc811fd246b52428b641a2a",
+    "dataset.py": "b3452da21da59c158bea4302fad83da0288c199d9dec68ab46b10910cde07145",
+    "experiment.py": "cc39143f428c6d45fc0aeebc598ee91e1db260b05bd70d1d0e7bb2b0889ef7b4",
+    "timing.py": "d45bd550b413b4abe148c7334e9000b9b87f39651ca0d772987650fb36e15187",
+    "test_dataset.py": "0dc69c5c0c831c0ee6a166903599a03825e219f44d79933a80dd51efc7a5f4a0",
+    "qwen.py": "755672407df4011492164ecfdb7aec4ac0294891e942bf154cc5b4e7f1c359da",
+    "response_parser.py": "0eda4bb1b3e2161e8d55d8f4ba98b6931d942a85988eb7cf7334bf7b73a8cbea",
+    "compare_models.py": "f913162e7863b244f6a9f9f912514640a6dcec5f50b824b4f2ceaefc2495a557",
+    "sudoku.py": "a7e3a68db912667abec9f6405876e3747c28b47e2556e634261a1f6589f57824",
+    "main.py": "e2b883f8789f8bef1e0e80afb4e4b351b3d76c88ea97fdb369b22ee0a42a60c2",
+    "reward.py": "2b82c5fd6ff2caa3068e5222d45e0e3f91dc422e639ba772126990916450e1ff",
+    "traces.py": "1860f2be650bc070a83e37a859ac2cfd400f44e6ec02bd8762dc303d4a641cf3",
+    "challenge.py": "86a24144ccdd55efb473de6416220d3573ef029b0853e54dee14178be4c995f4",
+    "test_sampling.py": "01688a2a45ff092dfa65e00e711eac752968dd46a57ba240c46be9f125b1b7e1"
+  },
+  "provenance_patch": "git_commit fixed to source_commit at launch; frozen code hashes identify uncommitted source exactly",
+  "models": {
+    "Qwen/Qwen3.5-2B": {
+      "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "original_snapshot": "/Users/dan/Models/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc"
+    },
+    "mlx-community/Qwen3.5-9B-4bit": {
+      "revision": "8b2b98c00a6b4d291155e4890773ca8f769aee53",
+      "original_snapshot": "/Users/dan/Models/huggingface/hub/models--mlx-community--Qwen3.5-9B-4bit/snapshots/8b2b98c00a6b4d291155e4890773ca8f769aee53"
+    }
+  },
+  "models_copied": false,
+  "python": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafi\u0301o Grupal/harness-iagen-sudoku/.venv/bin/python",
+  "dataset": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafi\u0301o Grupal/harness-iagen-sudoku/results/challenge-full-20261103/input",
+  "planned": {
+    "train_tasks": 450,
+    "teacher_samples": 3600,
+    "eval_tasks_per_model": 90,
+    "eval_samples_per_model": 720,
+    "total_samples": 5040
+  },
+  "pilot_extrapolated_hours": 34.96,
+  "environment": {
+    "HF_HUB_OFFLINE": "1",
+    "HF_HUB_CACHE": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafi\u0301o Grupal/harness-iagen-sudoku/results/challenge-full-20261103/model-cache",
+    "PYTHONUNBUFFERED": "1"
+  }
+}

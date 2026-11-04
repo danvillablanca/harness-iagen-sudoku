@@ -1,0 +1,215 @@
+{
+  "selection": "First stored example matching each stated condition; illustrative, not a random sample.",
+  "examples": [
+    {
+      "kind": "SFT accepted 9x9 medium",
+      "record": {
+        "task_id": "train-9x9-medium-00012",
+        "prompt": "Solve the following 9x9 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 9.\n- Each row must contain the numbers 1 through 9 exactly once.\n- Each column must contain the numbers 1 through 9 exactly once.\n- Each 3x3 box must contain 1 through 9 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 7, 2, 8, 0, 3, 9, 1, 6],\n  [6, 8, 3, 9, 0, 7, 4, 5, 2],\n  [0, 5, 1, 6, 2, 4, 7, 0, 0],\n  [7, 1, 6, 2, 3, 9, 8, 4, 5],\n  [3, 4, 5, 0, 8, 6, 2, 0, 7],\n  [2, 9, 0, 4, 0, 5, 0, 6, 0],\n  [0, 0, 0, 7, 6, 8, 5, 0, 0],\n  [8, 0, 4, 0, 0, 2, 1, 0, 3],\n  [5, 2, 7, 3, 4, 1, 6, 8, 9]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+        "completion": "<answer>\n[\n  [4, 7, 2, 8, 5, 3, 9, 1, 6],\n  [6, 8, 3, 9, 1, 7, 4, 5, 2],\n  [9, 5, 1, 6, 2, 4, 7, 3, 8],\n  [7, 1, 6, 2, 3, 9, 8, 4, 5],\n  [3, 4, 5, 1, 8, 6, 2, 9, 7],\n  [2, 9, 8, 4, 7, 5, 3, 6, 1],\n  [1, 3, 9, 7, 6, 8, 5, 2, 4],\n  [8, 6, 4, 5, 9, 2, 1, 7, 3],\n  [5, 2, 7, 3, 4, 1, 6, 8, 9]\n]\n</answer>",
+        "candidate_id": "train-9x9-medium-00012:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Solve the following 9x9 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 9.\n- Each row must contain the numbers 1 through 9 exactly once.\n- Each column must contain the numbers 1 through 9 exactly once.\n- Each 3x3 box must contain 1 through 9 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 7, 2, 8, 0, 3, 9, 1, 6],\n  [6, 8, 3, 9, 0, 7, 4, 5, 2],\n  [0, 5, 1, 6, 2, 4, 7, 0, 0],\n  [7, 1, 6, 2, 3, 9, 8, 4, 5],\n  [3, 4, 5, 0, 8, 6, 2, 0, 7],\n  [2, 9, 0, 4, 0, 5, 0, 6, 0],\n  [0, 0, 0, 7, 6, 8, 5, 0, 0],\n  [8, 0, 4, 0, 0, 2, 1, 0, 3],\n  [5, 2, 7, 3, 4, 1, 6, 8, 9]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag."
+          },
+          {
+            "role": "assistant",
+            "content": "<answer>\n[\n  [4, 7, 2, 8, 5, 3, 9, 1, 6],\n  [6, 8, 3, 9, 1, 7, 4, 5, 2],\n  [9, 5, 1, 6, 2, 4, 7, 3, 8],\n  [7, 1, 6, 2, 3, 9, 8, 4, 5],\n  [3, 4, 5, 1, 8, 6, 2, 9, 7],\n  [2, 9, 8, 4, 7, 5, 3, 6, 1],\n  [1, 3, 9, 7, 6, 8, 5, 2, 4],\n  [8, 6, 4, 5, 9, 2, 1, 7, 3],\n  [5, 2, 7, 3, 4, 1, 6, 8, 9]\n]\n</answer>"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "DPO same task, chosen=1 and rejected=0",
+      "record": {
+        "task_id": "train-4x4-easy-00000",
+        "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 4, 0],\n  [0, 0, 0, 2],\n  [2, 3, 1, 4],\n  [0, 1, 2, 3]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+        "chosen": "<answer>\n[\n  [3, 2, 4, 1],\n  [1, 4, 3, 2],\n  [2, 3, 1, 4],\n  [4, 1, 2, 3]\n]\n</answer>",
+        "rejected": "<answer>\n[\n  [1, 2, 4, 3],\n  [3, 4, 1, 2],\n  [2, 3, 1, 4],\n  [4, 1, 2, 3]\n]\n</answer>",
+        "chosen_id": "train-4x4-easy-00000:0",
+        "rejected_id": "train-4x4-easy-00000:1"
+      }
+    },
+    {
+      "kind": "Baseline Qwen/Qwen3.5-2B: accepted",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 3, 4],\n  [0, 4, 2, 1],\n  [0, 0, 1, 0],\n  [2, 1, 4, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "record": {
+        "model": "Qwen/Qwen3.5-2B",
+        "thinking": false,
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "max_tokens": 1024,
+        "n": 8,
+        "seed": 42,
+        "top_k": 20,
+        "presence_penalty": 1.5,
+        "backend": "mlx",
+        "max_prompt_tokens": 2048,
+        "answer_prefix": true,
+        "run_id": "b90ba25da1422e4264a77a0c9351bbb9ae9228090f7d47ad96440939f6a656dc",
+        "task_id": "eval-4x4-easy-00000",
+        "split": "eval",
+        "size": 4,
+        "level": "easy",
+        "empty_cells": 6,
+        "sample": 0,
+        "sample_seed": 302545577,
+        "prompt_sha256": "62bc3d4cb93422fcd59f366a154388c1777708dbf0642d099a0f1c0f2714915a",
+        "reward": 1.0,
+        "finish_reason": "stop",
+        "generated_tokens": 63,
+        "prompt_tokens": 293,
+        "seconds": 2.4087580000050366,
+        "format_ok": true,
+        "parser_issues": [],
+        "checks": {
+          "Required answer format": true,
+          "Parseable NxN integer array": true,
+          "All cells filled": true,
+          "Allowed values": true,
+          "Rows": true,
+          "Columns": true,
+          "Boxes": true,
+          "Original clues": true
+        },
+        "completion": "<answer>\n[\n  [1, 2, 3, 4],\n  [3, 4, 2, 1],\n  [4, 3, 1, 2],\n  [2, 1, 4, 3]\n]\n</answer>"
+      }
+    },
+    {
+      "kind": "Baseline Qwen/Qwen3.5-2B: rejected",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 3, 4],\n  [0, 4, 2, 1],\n  [0, 0, 1, 0],\n  [2, 1, 4, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "record": {
+        "model": "Qwen/Qwen3.5-2B",
+        "thinking": false,
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "max_tokens": 1024,
+        "n": 8,
+        "seed": 42,
+        "top_k": 20,
+        "presence_penalty": 1.5,
+        "backend": "mlx",
+        "max_prompt_tokens": 2048,
+        "answer_prefix": true,
+        "run_id": "b90ba25da1422e4264a77a0c9351bbb9ae9228090f7d47ad96440939f6a656dc",
+        "task_id": "eval-4x4-easy-00000",
+        "split": "eval",
+        "size": 4,
+        "level": "easy",
+        "empty_cells": 6,
+        "sample": 1,
+        "sample_seed": 3918222910,
+        "prompt_sha256": "62bc3d4cb93422fcd59f366a154388c1777708dbf0642d099a0f1c0f2714915a",
+        "reward": 0.0,
+        "finish_reason": "stop",
+        "generated_tokens": 63,
+        "prompt_tokens": 293,
+        "seconds": 2.3672264580090996,
+        "format_ok": true,
+        "parser_issues": [],
+        "checks": {
+          "Required answer format": true,
+          "Parseable NxN integer array": true,
+          "All cells filled": false,
+          "Allowed values": false,
+          "Rows": false,
+          "Columns": false,
+          "Boxes": false,
+          "Original clues": false
+        },
+        "completion": "<answer>\n[\n  [4, 2, 3, 1],\n  [1, 4, 2, 0],\n  [0, 0, 1, 3],\n  [2, 1, 4, 3]\n]\n</answer>"
+      }
+    },
+    {
+      "kind": "Baseline mlx-community/Qwen3.5-9B-4bit: accepted",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 3, 4],\n  [0, 4, 2, 1],\n  [0, 0, 1, 0],\n  [2, 1, 4, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "record": {
+        "model": "mlx-community/Qwen3.5-9B-4bit",
+        "thinking": false,
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "max_tokens": 1024,
+        "n": 8,
+        "seed": 42,
+        "top_k": 20,
+        "presence_penalty": 1.5,
+        "backend": "mlx",
+        "max_prompt_tokens": 2048,
+        "answer_prefix": true,
+        "run_id": "8ba1cc656099c5d7077075c1011e51353e30d6137996c89291c03e28df1e38c2",
+        "task_id": "eval-4x4-easy-00000",
+        "split": "eval",
+        "size": 4,
+        "level": "easy",
+        "empty_cells": 6,
+        "sample": 1,
+        "sample_seed": 3918222910,
+        "prompt_sha256": "62bc3d4cb93422fcd59f366a154388c1777708dbf0642d099a0f1c0f2714915a",
+        "reward": 1.0,
+        "finish_reason": "stop",
+        "generated_tokens": 63,
+        "prompt_tokens": 293,
+        "seconds": 3.265330124995671,
+        "format_ok": true,
+        "parser_issues": [],
+        "checks": {
+          "Required answer format": true,
+          "Parseable NxN integer array": true,
+          "All cells filled": true,
+          "Allowed values": true,
+          "Rows": true,
+          "Columns": true,
+          "Boxes": true,
+          "Original clues": true
+        },
+        "completion": "<answer>\n[\n  [1, 2, 3, 4],\n  [3, 4, 2, 1],\n  [4, 3, 1, 2],\n  [2, 1, 4, 3]\n]\n</answer>"
+      }
+    },
+    {
+      "kind": "Baseline mlx-community/Qwen3.5-9B-4bit: rejected",
+      "prompt": "Solve the following 4x4 Sudoku.\n\nRules:\n- A 0 represents an empty cell.\n- Replace every 0 with an integer from 1 to 4.\n- Each row must contain the numbers 1 through 4 exactly once.\n- Each column must contain the numbers 1 through 4 exactly once.\n- Each 2x2 box must contain 1 through 4 exactly once.\n- Do not change any original nonzero number.\n\nPuzzle:\n[\n  [0, 2, 3, 4],\n  [0, 4, 2, 1],\n  [0, 0, 1, 0],\n  [2, 1, 4, 0]\n]\n\nReturn the completed grid. No zeros may remain. Any grid that satisfies all the rules is a valid answer.\nCheck your answer silently.\n\nReturn ONLY the final answer block. Do not explain, repeat the puzzle, or show intermediate steps.\nEnd your response with exactly one <answer>...</answer> block containing the final completed grid.\nUse these tags only for the final answer, never for examples or intermediate grids.\nDo not include explanations, comments, or Markdown fences inside it.\nDo not write any text after the closing answer tag.",
+      "record": {
+        "model": "mlx-community/Qwen3.5-9B-4bit",
+        "thinking": false,
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "max_tokens": 1024,
+        "n": 8,
+        "seed": 42,
+        "top_k": 20,
+        "presence_penalty": 1.5,
+        "backend": "mlx",
+        "max_prompt_tokens": 2048,
+        "answer_prefix": true,
+        "run_id": "8ba1cc656099c5d7077075c1011e51353e30d6137996c89291c03e28df1e38c2",
+        "task_id": "eval-4x4-easy-00000",
+        "split": "eval",
+        "size": 4,
+        "level": "easy",
+        "empty_cells": 6,
+        "sample": 0,
+        "sample_seed": 302545577,
+        "prompt_sha256": "62bc3d4cb93422fcd59f366a154388c1777708dbf0642d099a0f1c0f2714915a",
+        "reward": 0.0,
+        "finish_reason": "stop",
+        "generated_tokens": 63,
+        "prompt_tokens": 293,
+        "seconds": 3.3822069999878295,
+        "format_ok": true,
+        "parser_issues": [],
+        "checks": {
+          "Required answer format": true,
+          "Parseable NxN integer array": true,
+          "All cells filled": true,
+          "Allowed values": true,
+          "Rows": false,
+          "Columns": true,
+          "Boxes": true,
+          "Original clues": true
+        },
+        "completion": "<answer>\n[\n  [3, 2, 3, 4],\n  [1, 4, 2, 1],\n  [4, 3, 1, 2],\n  [2, 1, 4, 3]\n]\n</answer>"
+      }
+    }
+  ]
+}

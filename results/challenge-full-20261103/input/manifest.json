@@ -1,0 +1,30 @@
+{
+  "seed": 0,
+  "sizes": [
+    4,
+    6,
+    9
+  ],
+  "counts_per_group": {
+    "train": 50,
+    "eval": 10,
+    "test": 10
+  },
+  "unique": true,
+  "response_style": "final",
+  "generator_sha256": "b3452da21da59c158bea4302fad83da0288c199d9dec68ab46b10910cde07145",
+  "files": {
+    "train": {
+      "tasks": 450,
+      "sha256": "f7bc1d02af3eed7a0c076f916cac19b84f95aa986d4dbc5f50e9563d8dc7015e"
+    },
+    "eval": {
+      "tasks": 90,
+      "sha256": "3f65947a9f90e76579ceee290d2384fe02fdedd444e9a8aea7c7c74c1409e381"
+    },
+    "test": {
+      "tasks": 90,
+      "sha256": "88b9f926650ef42b4615addb50a765bea0e0263d0d9de4bdffe30c130eac8906"
+    }
+  }
+}

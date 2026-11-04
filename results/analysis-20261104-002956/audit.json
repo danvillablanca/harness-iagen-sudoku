@@ -1,0 +1,64 @@
+{
+  "dataset": {
+    "tasks": {
+      "train": 450,
+      "eval": 90,
+      "test": 90
+    },
+    "by_level": {
+      "train": {
+        "4x4/easy": 50,
+        "4x4/medium": 50,
+        "4x4/hard": 50,
+        "6x6/easy": 50,
+        "6x6/medium": 50,
+        "6x6/hard": 50,
+        "9x9/easy": 50,
+        "9x9/medium": 50,
+        "9x9/hard": 50
+      },
+      "eval": {
+        "4x4/easy": 10,
+        "4x4/medium": 10,
+        "4x4/hard": 10,
+        "6x6/easy": 10,
+        "6x6/medium": 10,
+        "6x6/hard": 10,
+        "9x9/easy": 10,
+        "9x9/medium": 10,
+        "9x9/hard": 10
+      },
+      "test": {
+        "4x4/easy": 10,
+        "4x4/medium": 10,
+        "4x4/hard": 10,
+        "6x6/easy": 10,
+        "6x6/medium": 10,
+        "6x6/hard": 10,
+        "9x9/easy": 10,
+        "9x9/medium": 10,
+        "9x9/hard": 10
+      }
+    },
+    "exact_overlap": 0,
+    "references_verified": 630,
+    "limitation": "Exact duplicate check; Sudoku symmetry classes are not excluded."
+  },
+  "teacher": {
+    "model": "mlx-community/Qwen3.5-9B-4bit",
+    "samples": 3237,
+    "samples_planned": 3600,
+    "complete": false,
+    "sft": 161,
+    "dpo": 600,
+    "sft_tasks": 161,
+    "dpo_tasks": 137,
+    "reverified": true
+  },
+  "duplicate_attempts": 0,
+  "all_attempt_seeds_verified": true,
+  "accepted_boards_independently_checked": 566,
+  "frozen_source_unchanged": true,
+  "frozen_inputs_unchanged": true,
+  "baseline": "Not started in this full run; this is not a final pipeline audit."
+}

@@ -3,6 +3,7 @@
 """Qwen3.5-2B: MLX on Apple Silicon; PyTorch on CUDA, MPS, or CPU."""
 
 import os
+import math
 import platform
 import shutil
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ GIB = 1024**3
 RAM_GIB = {"mlx": 8, "mps": 8, "cuda": 6, "cpu": 12}
 
 MAX_PROMPT_TOKENS = 2048
+ANSWER_PREFIX = "<answer>\n["
 
 
 def _check_resources(backend):
@@ -78,6 +80,12 @@ class Qwen:
         *,
         enable_thinking: bool | None = None,
         shots: tuple = (),
+        temperature: float = 0.0,
+        top_p: float = 1.0,
+        seed: int | None = None,
+        top_k: int = 0,
+        presence_penalty: float = 0.0,
+        progress_callback=None,
     ) -> str:
         """Return only the generated text, preserving the original interface."""
         return self.generate_with_stats(
@@ -85,6 +93,12 @@ class Qwen:
             max_tokens=max_tokens,
             enable_thinking=enable_thinking,
             shots=shots,
+            temperature=temperature,
+            top_p=top_p,
+            seed=seed,
+            top_k=top_k,
+            presence_penalty=presence_penalty,
+            progress_callback=progress_callback,
         ).text
 
     def generate_with_stats(
@@ -94,6 +108,12 @@ class Qwen:
         *,
         enable_thinking: bool | None = None,
         shots: tuple = (),
+        temperature: float = 0.0,
+        top_p: float = 1.0,
+        seed: int | None = None,
+        top_k: int = 0,
+        presence_penalty: float = 0.0,
+        progress_callback=None,
     ) -> GenerationResult:
         """Return text and token counts measured during generation.
 
@@ -101,12 +121,33 @@ class Qwen:
         before the prompt.
         """
         tokens, max_tokens = self._prompt_ids(prompt, max_tokens, enable_thinking, shots)
+        for name, value in (("temperature", temperature), ("top_p", top_p), ("presence_penalty", presence_penalty)):
+            if type(value) not in (int, float) or not math.isfinite(value):
+                raise ValueError(f"{name} must be a finite number.")
+        if temperature < 0 or not 0 < top_p <= 1:
+            raise ValueError("temperature must be >= 0 and top_p must be in (0, 1].")
+        if seed is not None and (type(seed) is not int or not 0 <= seed < 2**32):
+            raise ValueError("seed must be an integer in [0, 2**32), or None.")
+
+        if type(top_k) is not int or top_k < 0 or not 0 <= presence_penalty <= 2:
+            raise ValueError("top_k must be a nonnegative integer and presence_penalty must be in [0, 2].")
+
+
         prompt_tokens = len(tokens)
 
         if self.backend == "mlx":
             import mlx.core as mx
             from mlx_lm import stream_generate
             from mlx_lm.sample_utils import make_sampler
+
+            if seed is not None:
+                mx.random.seed(seed)
+            # MLX prefill leaves the last prompt token in the processor history;
+            # apply presence penalty to generated tokens only.
+            def penalize_presence(history, logits):
+                if len(history) > 1:
+                    logits[:, history[1:]] -= presence_penalty
+                return logits
 
             parts = []
             last_chunk = None
@@ -117,17 +158,20 @@ class Qwen:
                     self.tokenizer,
                     prompt=tokens,
                     max_tokens=max_tokens,
-                    sampler=make_sampler(temp=0),
+                    sampler=make_sampler(temp=temperature, top_p=top_p, top_k=top_k),
+                    logits_processors=[penalize_presence] if presence_penalty else None,
                 ):
                     parts.append(chunk.text)
                     last_chunk = chunk
+                    if progress_callback is not None and chunk.generation_tokens % 512 == 0:
+                        progress_callback(chunk.generation_tokens, chunk.generation_tps)
 
             if last_chunk is None:
                 raise RuntimeError("MLX returned no generation output.")
 
             # Use the runtime counter, including special tokens when counted.
             return GenerationResult(
-                text="".join(parts),
+                text=(ANSWER_PREFIX if self.config.answer_prefix else "") + "".join(parts),
                 prompt_tokens=prompt_tokens,
                 generated_tokens=int(last_chunk.generation_tokens),
                 finish_reason=getattr(last_chunk, "finish_reason", None),
@@ -136,6 +180,8 @@ class Qwen:
 
         import torch
 
+        if seed is not None:
+            torch.manual_seed(seed)
         inputs = torch.tensor(
             [tokens],
             dtype=torch.long,
@@ -146,15 +192,22 @@ class Qwen:
         if pad_id is None:
             pad_id = self.tokenizer.eos_token_id
 
+        def penalize_presence_torch(input_ids, scores):
+            generated = input_ids[:, prompt_tokens:]
+            if generated.shape[1]:
+                scores.scatter_(1, generated, scores.gather(1, generated) - presence_penalty)
+            return scores
+
         with torch.inference_mode():
             output = self.model.generate(
                 input_ids=inputs,
                 attention_mask=torch.ones_like(inputs),
                 max_new_tokens=max_tokens,
-                do_sample=False,
-                temperature=None,
-                top_p=None,
-                top_k=None,
+                do_sample=temperature > 0,
+                temperature=temperature if temperature > 0 else None,
+                top_p=top_p if temperature > 0 else None,
+                top_k=top_k if temperature > 0 else None,
+                logits_processor=[penalize_presence_torch] if presence_penalty else None,
                 pad_token_id=pad_id,
                 return_dict_in_generate=False,
             )
@@ -183,9 +236,9 @@ class Qwen:
         """
         if type(n) is not int or n < 1:
             raise ValueError("n must be a positive integer.")
-        if not temperature > 0:
+        if type(temperature) not in (int, float) or not math.isfinite(temperature) or temperature <= 0:
             raise ValueError("temperature must be positive; use generate_with_stats for greedy.")
-        if not 0 < top_p <= 1:
+        if type(top_p) not in (int, float) or not math.isfinite(top_p) or not 0 < top_p <= 1:
             raise ValueError("top_p must be in (0, 1].")
 
         tokens, max_tokens = self._prompt_ids(prompt, max_tokens, enable_thinking, shots)
@@ -215,7 +268,7 @@ class Qwen:
                 if last_chunk is None:
                     raise RuntimeError("MLX returned no generation output.")
                 results.append(GenerationResult(
-                    text="".join(parts),
+                    text=(ANSWER_PREFIX if self.config.answer_prefix else "") + "".join(parts),
                     prompt_tokens=prompt_tokens,
                     generated_tokens=int(last_chunk.generation_tokens),
                     finish_reason=getattr(last_chunk, "finish_reason", None),
@@ -283,6 +336,11 @@ class Qwen:
             enable_thinking=enable_thinking,
         )
 
+        if self.config.answer_prefix:
+            if enable_thinking:
+                raise ValueError('Answer prefill cannot be combined with thinking mode.')
+            tokens += self.tokenizer.encode(ANSWER_PREFIX, add_special_tokens=False)
+
         if len(tokens) > self.config.max_prompt_tokens:
             raise ValueError(
                 f"The prompt contains {len(tokens)} tokens; "
@@ -334,7 +392,7 @@ class Qwen:
                 text = text.replace(special_token, "")
 
         return GenerationResult(
-            text=text,
+            text=(ANSWER_PREFIX if self.config.answer_prefix else "") + text,
             prompt_tokens=prompt_tokens,
             generated_tokens=generated_tokens,
             finish_reason=finish_reason,

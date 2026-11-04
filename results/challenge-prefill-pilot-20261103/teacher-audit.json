@@ -1,0 +1,11 @@
+{
+  "model": "mlx-community/Qwen3.5-9B-4bit",
+  "samples": 36,
+  "samples_planned": 36,
+  "complete": true,
+  "sft": 2,
+  "dpo": 5,
+  "sft_tasks": 2,
+  "dpo_tasks": 2,
+  "reverified": true
+}

@@ -1,0 +1,30 @@
+{
+  "9b": {
+    "status": "complete_requested_subset",
+    "planned": 2,
+    "completed": 2,
+    "correct": 0,
+    "pass_at_1": 0.0,
+    "mathematically_solved": 0,
+    "format_failures": 2,
+    "token_limit_reached": 2,
+    "generation_seconds": 1255.5286640009872,
+    "by_empty_cells": {
+      "10": {
+        "planned": 2,
+        "completed": 2,
+        "correct": 0,
+        "pass_at_1": 0.0,
+        "mathematically_solved": 0,
+        "format_failures": 2,
+        "token_limit_reached": 2,
+        "generation_seconds": 1255.5286640009872
+      }
+    }
+  },
+  "scope": {
+    "requested_cases": 2,
+    "original_cases": 9,
+    "reason": "User requested stopping after case 2; no further cases will be run."
+  }
+}

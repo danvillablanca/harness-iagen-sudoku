@@ -1,0 +1,983 @@
+{
+  "snapshot": {
+    "captured_local": "2026-11-04T00:29:56.373525-03:00",
+    "source_run": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafío Grupal/harness-iagen-sudoku/results/challenge-full-20261103",
+    "samples": 3237,
+    "completed_tasks": 404,
+    "snapshot_candidate_sha256": "003495f0c9b311edd58b5998b4d23c3825a941a15920d3cda247916173cbe84b",
+    "scope": "9B teacher on train; full-run baselines not started",
+    "exports": "Reconstructed from this exact candidate prefix using frozen export_task; counts match its saved summary."
+  },
+  "interpretation": "Teacher on train, before any weight training; not held-out baseline accuracy.",
+  "overall": {
+    "samples": 3237,
+    "tasks_started": 405,
+    "tasks_complete": 404,
+    "accepted": 566,
+    "sft_tasks": 161,
+    "pass_k_on_complete_tasks": {
+      "1": 0.1751237623762376,
+      "2": 0.24133663366336633,
+      "4": 0.3176096181046676,
+      "8": 0.39851485148514854
+    },
+    "task_success_histogram": {
+      "0": 243,
+      "1": 51,
+      "2": 26,
+      "3": 20,
+      "4": 13,
+      "5": 9,
+      "6": 12,
+      "7": 6,
+      "8": 24
+    },
+    "tasks_zero_success": 243,
+    "tasks_all_success": 24,
+    "tasks_mixed": 137,
+    "pass8_task_wilson95": [
+      0.3519454279708163,
+      0.4469960522869547
+    ],
+    "actual_prefix_coverage": {
+      "1": 72,
+      "2": 103,
+      "3": 116,
+      "4": 128,
+      "5": 140,
+      "6": 148,
+      "7": 156,
+      "8": 161
+    },
+    "truncated": 973,
+    "accepted_truncated": 0,
+    "truncation_rate": 0.3005869632375657,
+    "accepted_among_nontruncated": 566,
+    "nontruncated_samples": 2264,
+    "categories": {
+      "accepted": 566,
+      "math_with_valid_format": 1653,
+      "unparseable": 244,
+      "format_and_math": 774
+    },
+    "failed_checks": {
+      "Columns": 2186,
+      "Original clues": 541,
+      "All cells filled": 763,
+      "Allowed values": 801,
+      "Rows": 1937,
+      "Boxes": 2116,
+      "Required answer format": 1018,
+      "Parseable NxN integer array": 244
+    },
+    "copied_input": 2,
+    "internally_valid_but_changed_clues": 124,
+    "wrong_cells_in_formatted_errors": {
+      "median": 7,
+      "one": 47,
+      "two": 175
+    },
+    "zero_success_tasks_identical_all8": 1,
+    "mean_unique_responses_per_complete_task": 6.391089108910891,
+    "tokens": 1306508,
+    "generation_seconds_saved_attempts": 57079.92115223105,
+    "truncation_token_share": 0.7626068879792546,
+    "truncation_time_share": 0.7389125852234786,
+    "seconds_per_unique_sft": 354.5336717529879,
+    "seconds_by_reward": {
+      "0": 54278.80307156901,
+      "1": 2801.1180806620396
+    },
+    "accepted_token_histogram": {
+      "63": 415,
+      "127": 100,
+      "268": 51
+    }
+  },
+  "groups": {
+    "4x4/easy": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 251,
+      "sft_tasks": 47,
+      "pass_k_on_complete_tasks": {
+        "1": 0.6275,
+        "2": 0.75,
+        "4": 0.8517142857142858,
+        "8": 0.94
+      },
+      "task_success_histogram": {
+        "0": 3,
+        "1": 7,
+        "2": 3,
+        "3": 3,
+        "4": 4,
+        "5": 5,
+        "6": 5,
+        "7": 2,
+        "8": 18
+      },
+      "tasks_zero_success": 3,
+      "tasks_all_success": 18,
+      "tasks_mixed": 29,
+      "pass8_task_wilson95": [
+        0.8378290831116182,
+        0.979385029651026
+      ],
+      "actual_prefix_coverage": {
+        "1": 33,
+        "2": 38,
+        "3": 43,
+        "4": 43,
+        "5": 44,
+        "6": 46,
+        "7": 47,
+        "8": 47
+      },
+      "truncated": 9,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.0225,
+      "accepted_among_nontruncated": 251,
+      "nontruncated_samples": 391,
+      "categories": {
+        "accepted": 251,
+        "math_with_valid_format": 123,
+        "unparseable": 20,
+        "format_and_math": 6
+      },
+      "failed_checks": {
+        "Columns": 109,
+        "Original clues": 41,
+        "All cells filled": 36,
+        "Allowed values": 36,
+        "Rows": 73,
+        "Boxes": 92,
+        "Required answer format": 26,
+        "Parseable NxN integer array": 20
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 13,
+      "wrong_cells_in_formatted_errors": {
+        "median": 3,
+        "one": 20,
+        "two": 25
+      },
+      "zero_success_tasks_identical_all8": 1,
+      "mean_unique_responses_per_complete_task": 2.78,
+      "tokens": 44230,
+      "generation_seconds_saved_attempts": 2713.4347717891796,
+      "truncation_token_share": 0.2083653628758761,
+      "truncation_time_share": 0.1779697765126679,
+      "seconds_per_unique_sft": 57.73265471891872,
+      "seconds_by_reward": {
+        "0": 1631.5156549570675,
+        "1": 1081.9191168321122
+      },
+      "accepted_token_histogram": {
+        "63": 251
+      },
+      "tasks_planned": 50,
+      "holes_min": 4,
+      "holes_max": 6,
+      "deducible_by_singles": 50,
+      "sft_records": 47,
+      "dpo_pairs": 79
+    },
+    "4x4/medium": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 121,
+      "sft_tasks": 33,
+      "pass_k_on_complete_tasks": {
+        "1": 0.3025,
+        "2": 0.4185714285714286,
+        "4": 0.5371428571428571,
+        "8": 0.66
+      },
+      "task_success_histogram": {
+        "0": 17,
+        "1": 10,
+        "2": 4,
+        "3": 3,
+        "4": 5,
+        "5": 1,
+        "6": 5,
+        "7": 1,
+        "8": 4
+      },
+      "tasks_zero_success": 17,
+      "tasks_all_success": 4,
+      "tasks_mixed": 29,
+      "pass8_task_wilson95": [
+        0.521538260502326,
+        0.7756305077749992
+      ],
+      "actual_prefix_coverage": {
+        "1": 16,
+        "2": 23,
+        "3": 25,
+        "4": 29,
+        "5": 31,
+        "6": 31,
+        "7": 32,
+        "8": 33
+      },
+      "truncated": 74,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.185,
+      "accepted_among_nontruncated": 121,
+      "nontruncated_samples": 326,
+      "categories": {
+        "accepted": 121,
+        "math_with_valid_format": 194,
+        "unparseable": 22,
+        "format_and_math": 63
+      },
+      "failed_checks": {
+        "Columns": 209,
+        "Required answer format": 85,
+        "Parseable NxN integer array": 22,
+        "All cells filled": 81,
+        "Allowed values": 81,
+        "Rows": 142,
+        "Boxes": 173,
+        "Original clues": 99
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 31,
+      "wrong_cells_in_formatted_errors": {
+        "median": 5.0,
+        "one": 0,
+        "two": 29
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 5.28,
+      "tokens": 100414,
+      "generation_seconds_saved_attempts": 4811.750891962991,
+      "truncation_token_share": 0.7546358077558906,
+      "truncation_time_share": 0.730821030872719,
+      "seconds_per_unique_sft": 145.81063308978761,
+      "seconds_by_reward": {
+        "0": 4399.268995918013,
+        "1": 412.4818960449775
+      },
+      "accepted_token_histogram": {
+        "63": 121
+      },
+      "tasks_planned": 50,
+      "holes_min": 7,
+      "holes_max": 9,
+      "deducible_by_singles": 50,
+      "sft_records": 33,
+      "dpo_pairs": 126
+    },
+    "4x4/hard": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 43,
+      "sft_tasks": 25,
+      "pass_k_on_complete_tasks": {
+        "1": 0.1075,
+        "2": 0.19642857142857142,
+        "4": 0.3311428571428571,
+        "8": 0.5
+      },
+      "task_success_histogram": {
+        "0": 25,
+        "1": 14,
+        "2": 5,
+        "3": 5,
+        "4": 1
+      },
+      "tasks_zero_success": 25,
+      "tasks_all_success": 0,
+      "tasks_mixed": 25,
+      "pass8_task_wilson95": [
+        0.3664451431682858,
+        0.6335548568317142
+      ],
+      "actual_prefix_coverage": {
+        "1": 4,
+        "2": 9,
+        "3": 12,
+        "4": 15,
+        "5": 20,
+        "6": 21,
+        "7": 24,
+        "8": 25
+      },
+      "truncated": 117,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.2925,
+      "accepted_among_nontruncated": 43,
+      "nontruncated_samples": 283,
+      "categories": {
+        "math_with_valid_format": 235,
+        "format_and_math": 108,
+        "unparseable": 14,
+        "accepted": 43
+      },
+      "failed_checks": {
+        "Columns": 208,
+        "Boxes": 235,
+        "Rows": 193,
+        "Required answer format": 122,
+        "All cells filled": 89,
+        "Allowed values": 89,
+        "Original clues": 179,
+        "Parseable NxN integer array": 14
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 77,
+      "wrong_cells_in_formatted_errors": {
+        "median": 7,
+        "one": 0,
+        "two": 6
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 7.12,
+      "tokens": 137497,
+      "generation_seconds_saved_attempts": 5664.840970411256,
+      "truncation_token_share": 0.8713499203618988,
+      "truncation_time_share": 0.8509411912018888,
+      "seconds_per_unique_sft": 226.59363881645027,
+      "seconds_by_reward": {
+        "0": 5536.467249499168,
+        "1": 128.37372091208817
+      },
+      "accepted_token_histogram": {
+        "63": 43
+      },
+      "tasks_planned": 50,
+      "holes_min": 10,
+      "holes_max": 12,
+      "deducible_by_singles": 50,
+      "sft_records": 25,
+      "dpo_pairs": 147
+    },
+    "6x6/easy": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 71,
+      "sft_tasks": 24,
+      "pass_k_on_complete_tasks": {
+        "1": 0.1775,
+        "2": 0.26571428571428574,
+        "4": 0.37142857142857144,
+        "8": 0.48
+      },
+      "task_success_histogram": {
+        "0": 26,
+        "1": 8,
+        "2": 5,
+        "3": 5,
+        "5": 2,
+        "6": 1,
+        "7": 2,
+        "8": 1
+      },
+      "tasks_zero_success": 26,
+      "tasks_all_success": 1,
+      "tasks_mixed": 23,
+      "pass8_task_wilson95": [
+        0.34797135286578046,
+        0.6148825510995539
+      ],
+      "actual_prefix_coverage": {
+        "1": 7,
+        "2": 14,
+        "3": 16,
+        "4": 17,
+        "5": 20,
+        "6": 22,
+        "7": 24,
+        "8": 24
+      },
+      "truncated": 86,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.215,
+      "accepted_among_nontruncated": 71,
+      "nontruncated_samples": 314,
+      "categories": {
+        "math_with_valid_format": 240,
+        "format_and_math": 69,
+        "unparseable": 20,
+        "accepted": 71
+      },
+      "failed_checks": {
+        "Rows": 234,
+        "Columns": 295,
+        "Boxes": 273,
+        "Required answer format": 89,
+        "All cells filled": 88,
+        "Allowed values": 93,
+        "Parseable NxN integer array": 20,
+        "Original clues": 41
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 1,
+      "wrong_cells_in_formatted_errors": {
+        "median": 4.0,
+        "one": 15,
+        "two": 59
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 5.84,
+      "tokens": 127932,
+      "generation_seconds_saved_attempts": 5474.93878899276,
+      "truncation_token_share": 0.6883656942750837,
+      "truncation_time_share": 0.6674789224153496,
+      "seconds_per_unique_sft": 228.122449541365,
+      "seconds_by_reward": {
+        "0": 5062.553119285847,
+        "1": 412.3856697069132
+      },
+      "accepted_token_histogram": {
+        "127": 71
+      },
+      "tasks_planned": 50,
+      "holes_min": 8,
+      "holes_max": 12,
+      "deducible_by_singles": 50,
+      "sft_records": 24,
+      "dpo_pairs": 94
+    },
+    "6x6/medium": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 29,
+      "sft_tasks": 14,
+      "pass_k_on_complete_tasks": {
+        "1": 0.0725,
+        "2": 0.12214285714285714,
+        "4": 0.1957142857142857,
+        "8": 0.28
+      },
+      "task_success_histogram": {
+        "0": 36,
+        "1": 6,
+        "2": 5,
+        "3": 2,
+        "7": 1
+      },
+      "tasks_zero_success": 36,
+      "tasks_all_success": 0,
+      "tasks_mixed": 14,
+      "pass8_task_wilson95": [
+        0.17474170665911232,
+        0.4166512369595657
+      ],
+      "actual_prefix_coverage": {
+        "1": 4,
+        "2": 6,
+        "3": 6,
+        "4": 9,
+        "5": 10,
+        "6": 12,
+        "7": 13,
+        "8": 14
+      },
+      "truncated": 133,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.3325,
+      "accepted_among_nontruncated": 29,
+      "nontruncated_samples": 267,
+      "categories": {
+        "math_with_valid_format": 234,
+        "unparseable": 46,
+        "format_and_math": 91,
+        "accepted": 29
+      },
+      "failed_checks": {
+        "Rows": 270,
+        "Columns": 316,
+        "Boxes": 304,
+        "Required answer format": 137,
+        "Parseable NxN integer array": 46,
+        "All cells filled": 76,
+        "Allowed values": 86,
+        "Original clues": 59
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 2,
+      "wrong_cells_in_formatted_errors": {
+        "median": 8.0,
+        "one": 0,
+        "two": 18
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 7.3,
+      "tokens": 169821,
+      "generation_seconds_saved_attempts": 7086.079398045433,
+      "truncation_token_share": 0.8019738430465019,
+      "truncation_time_share": 0.7860852394499923,
+      "seconds_per_unique_sft": 506.1485284318166,
+      "seconds_by_reward": {
+        "0": 6921.804339543392,
+        "1": 164.27505850204034
+      },
+      "accepted_token_histogram": {
+        "127": 29
+      },
+      "tasks_planned": 50,
+      "holes_min": 13,
+      "holes_max": 18,
+      "deducible_by_singles": 50,
+      "sft_records": 14,
+      "dpo_pairs": 73
+    },
+    "6x6/hard": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 0,
+      "sft_tasks": 0,
+      "pass_k_on_complete_tasks": {
+        "1": 0.0,
+        "2": 0.0,
+        "4": 0.0,
+        "8": 0.0
+      },
+      "task_success_histogram": {
+        "0": 50
+      },
+      "tasks_zero_success": 50,
+      "tasks_all_success": 0,
+      "tasks_mixed": 0,
+      "pass8_task_wilson95": [
+        6.938893903907228e-18,
+        0.07134759913335872
+      ],
+      "actual_prefix_coverage": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0
+      },
+      "truncated": 234,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.585,
+      "accepted_among_nontruncated": 0,
+      "nontruncated_samples": 166,
+      "categories": {
+        "format_and_math": 132,
+        "math_with_valid_format": 161,
+        "unparseable": 107
+      },
+      "failed_checks": {
+        "Required answer format": 239,
+        "Rows": 276,
+        "Columns": 289,
+        "Boxes": 291,
+        "All cells filled": 72,
+        "Allowed values": 95,
+        "Original clues": 72,
+        "Parseable NxN integer array": 107
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 0,
+      "wrong_cells_in_formatted_errors": {
+        "median": 15,
+        "one": 0,
+        "two": 0
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 8,
+      "tokens": 260378,
+      "generation_seconds_saved_attempts": 10970.750676695985,
+      "truncation_token_share": 0.9202620805137147,
+      "truncation_time_share": 0.9123153315222673,
+      "seconds_per_unique_sft": null,
+      "seconds_by_reward": {
+        "0": 10970.750676695985,
+        "1": 0
+      },
+      "accepted_token_histogram": {},
+      "tasks_planned": 50,
+      "holes_min": 19,
+      "holes_max": 24,
+      "deducible_by_singles": 46,
+      "sft_records": 0,
+      "dpo_pairs": 0
+    },
+    "9x9/easy": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 50,
+      "sft_tasks": 17,
+      "pass_k_on_complete_tasks": {
+        "1": 0.125,
+        "2": 0.19214285714285714,
+        "4": 0.26914285714285713,
+        "8": 0.34
+      },
+      "task_success_histogram": {
+        "0": 33,
+        "1": 5,
+        "2": 4,
+        "3": 2,
+        "4": 3,
+        "5": 1,
+        "6": 1,
+        "8": 1
+      },
+      "tasks_zero_success": 33,
+      "tasks_all_success": 1,
+      "tasks_mixed": 16,
+      "pass8_task_wilson95": [
+        0.2243694922250009,
+        0.478461739497674
+      ],
+      "actual_prefix_coverage": {
+        "1": 7,
+        "2": 12,
+        "3": 13,
+        "4": 14,
+        "5": 14,
+        "6": 15,
+        "7": 15,
+        "8": 17
+      },
+      "truncated": 118,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.295,
+      "accepted_among_nontruncated": 50,
+      "nontruncated_samples": 282,
+      "categories": {
+        "math_with_valid_format": 232,
+        "format_and_math": 117,
+        "accepted": 50,
+        "unparseable": 1
+      },
+      "failed_checks": {
+        "All cells filled": 165,
+        "Allowed values": 165,
+        "Rows": 331,
+        "Columns": 340,
+        "Boxes": 331,
+        "Required answer format": 118,
+        "Original clues": 7,
+        "Parseable NxN integer array": 1
+      },
+      "copied_input": 2,
+      "internally_valid_but_changed_clues": 0,
+      "wrong_cells_in_formatted_errors": {
+        "median": 5.0,
+        "one": 12,
+        "two": 35
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 6.68,
+      "tokens": 196408,
+      "generation_seconds_saved_attempts": 8559.052654542873,
+      "truncation_token_share": 0.6152091564498391,
+      "truncation_time_share": 0.6053116227809787,
+      "seconds_per_unique_sft": 503.47368556134546,
+      "seconds_by_reward": {
+        "0": 7969.634105003963,
+        "1": 589.4185495389102
+      },
+      "accepted_token_histogram": {
+        "268": 50
+      },
+      "tasks_planned": 50,
+      "holes_min": 10,
+      "holes_max": 20,
+      "deducible_by_singles": 50,
+      "sft_records": 17,
+      "dpo_pairs": 74
+    },
+    "9x9/medium": {
+      "samples": 400,
+      "tasks_started": 50,
+      "tasks_complete": 50,
+      "accepted": 1,
+      "sft_tasks": 1,
+      "pass_k_on_complete_tasks": {
+        "1": 0.0025,
+        "2": 0.005,
+        "4": 0.01,
+        "8": 0.02
+      },
+      "task_success_histogram": {
+        "0": 49,
+        "1": 1
+      },
+      "tasks_zero_success": 49,
+      "tasks_all_success": 0,
+      "tasks_mixed": 1,
+      "pass8_task_wilson95": [
+        0.003539259271646236,
+        0.10495443589637815
+      ],
+      "actual_prefix_coverage": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 1
+      },
+      "truncated": 181,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.4525,
+      "accepted_among_nontruncated": 1,
+      "nontruncated_samples": 219,
+      "categories": {
+        "format_and_math": 171,
+        "math_with_valid_format": 218,
+        "unparseable": 10,
+        "accepted": 1
+      },
+      "failed_checks": {
+        "Required answer format": 181,
+        "Rows": 385,
+        "Columns": 387,
+        "Boxes": 384,
+        "All cells filled": 146,
+        "Allowed values": 146,
+        "Original clues": 32,
+        "Parseable NxN integer array": 10
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 0,
+      "wrong_cells_in_formatted_errors": {
+        "median": 15.0,
+        "one": 0,
+        "two": 3
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 8,
+      "tokens": 244036,
+      "generation_seconds_saved_attempts": 10686.591395578609,
+      "truncation_token_share": 0.7594945008113557,
+      "truncation_time_share": 0.7506389529704344,
+      "seconds_per_unique_sft": 10686.591395578609,
+      "seconds_by_reward": {
+        "0": 10674.327326453611,
+        "1": 12.26406912499806
+      },
+      "accepted_token_histogram": {
+        "268": 1
+      },
+      "tasks_planned": 50,
+      "holes_min": 21,
+      "holes_max": 35,
+      "deducible_by_singles": 50,
+      "sft_records": 1,
+      "dpo_pairs": 7
+    },
+    "9x9/hard": {
+      "samples": 37,
+      "tasks_started": 5,
+      "tasks_complete": 4,
+      "accepted": 0,
+      "sft_tasks": 0,
+      "pass_k_on_complete_tasks": {
+        "1": 0.0,
+        "2": 0.0,
+        "4": 0.0,
+        "8": 0.0
+      },
+      "task_success_histogram": {
+        "0": 4
+      },
+      "tasks_zero_success": 4,
+      "tasks_all_success": 0,
+      "tasks_mixed": 0,
+      "pass8_task_wilson95": [
+        0,
+        0.4898908364545973
+      ],
+      "actual_prefix_coverage": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0
+      },
+      "truncated": 21,
+      "accepted_truncated": 0,
+      "truncation_rate": 0.5675675675675675,
+      "accepted_among_nontruncated": 0,
+      "nontruncated_samples": 16,
+      "categories": {
+        "unparseable": 4,
+        "math_with_valid_format": 16,
+        "format_and_math": 17
+      },
+      "failed_checks": {
+        "Required answer format": 21,
+        "Parseable NxN integer array": 4,
+        "Rows": 33,
+        "Columns": 33,
+        "Boxes": 33,
+        "Original clues": 11,
+        "All cells filled": 10,
+        "Allowed values": 10
+      },
+      "copied_input": 0,
+      "internally_valid_but_changed_clues": 0,
+      "wrong_cells_in_formatted_errors": {
+        "median": 34.5,
+        "one": 0,
+        "two": 0
+      },
+      "zero_success_tasks_identical_all8": 0,
+      "mean_unique_responses_per_complete_task": 8,
+      "tokens": 25792,
+      "generation_seconds_saved_attempts": 1112.4816042119637,
+      "truncation_token_share": 0.8337468982630273,
+      "truncation_time_share": 0.8279408100382564,
+      "seconds_per_unique_sft": null,
+      "seconds_by_reward": {
+        "0": 1112.4816042119637,
+        "1": 0
+      },
+      "accepted_token_histogram": {},
+      "tasks_planned": 50,
+      "holes_min": 36,
+      "holes_max": 50,
+      "deducible_by_singles": 40,
+      "sft_records": 0,
+      "dpo_pairs": 0
+    }
+  },
+  "sft_records": 161,
+  "preferences": {
+    "pairs": 600,
+    "tasks": 137,
+    "pairs_per_task_histogram": {
+      "4": 21,
+      "5": 22,
+      "2": 15,
+      "3": 17,
+      "1": 14,
+      "6": 25,
+      "7": 23
+    },
+    "negative_categories": {
+      "math_with_valid_format": 404,
+      "unparseable": 50,
+      "format_and_math": 146
+    },
+    "negative_truncated": 176,
+    "negative_copied_input": 2,
+    "chosen_shorter_tokens": 186,
+    "same_tokens": 404,
+    "positive_mean_tokens": 108.48833333333333,
+    "negative_mean_tokens": 389.675,
+    "source": "synthetic verifier preferences; no human preference labels"
+  },
+  "macro_across_8_complete_groups": {
+    "1": 0.17687499999999998,
+    "2": 0.24375,
+    "4": 0.3207857142857143,
+    "8": 0.4025
+  },
+  "uncertainty_note": "Wilson intervals treat task-level success in 8 attempts as a Bernoulli outcome across tasks. They are descriptive, do not account for Sudoku symmetries, and do not establish causal effects.",
+  "timing_note": "Sums include completed/saved attempts only; omit model loading, pauses, discarded partial attempts and export overhead.",
+  "passk_method": "Mean over tasks with all 8 samples of 1 - C(8-c,k)/C(8,k), following Chen et al. 2021; k=1 is sampling accuracy, not greedy decoding.",
+  "passk_reference": "https://arxiv.org/html/2107.03374v2",
+  "post_answer_diagnostics": {
+    "counts": {
+      "truncated_total": 973,
+      "truncated_with_closed_answer": 882,
+      "truncated_with_text_after_first_answer": 882,
+      "truncated_self_correction_language": 970,
+      "rejected_with_any_correct_answer_block": 19
+    },
+    "additional_tasks_with_embedded_correct_block": [
+      "train-4x4-easy-00012",
+      "train-4x4-medium-00016",
+      "train-4x4-medium-00029"
+    ],
+    "method": "Diagnostic only: score each complete answer block independently. Actual verifier still scores the entire original response; no rejected example was promoted to SFT."
+  },
+  "coverage_bounds_at_fixed_budget": {
+    "completed_tasks_without_success": 243,
+    "planned_train_tasks": 450,
+    "maximum_final_tasks_with_sft": 207,
+    "maximum_final_task_coverage": 0.46,
+    "reason": "Completed tasks receive no more attempts in the frozen run; at most every remaining task can gain one successful response."
+  },
+  "structural_audit": {
+    "scope": "4x4 only; train/eval only; no model evaluations and no dataset changes",
+    "transformations": "digit renaming; row swaps within bands; band swaps; column swaps within stacks; stack swaps; transpose",
+    "caveat": "Structural equivalence does not prove memorization or performance inflation; it limits claims of structurally unseen evaluation tasks.",
+    "by_level": {
+      "easy": {
+        "train_tasks": 50,
+        "train_classes": 49,
+        "sft_tasks": 47,
+        "sft_classes": 46,
+        "eval_tasks": 10,
+        "eval_classes": 10,
+        "eval_tasks_equivalent_to_train": 0,
+        "eval_tasks_equivalent_to_sft": 0
+      },
+      "medium": {
+        "train_tasks": 50,
+        "train_classes": 50,
+        "sft_tasks": 33,
+        "sft_classes": 33,
+        "eval_tasks": 10,
+        "eval_classes": 10,
+        "eval_tasks_equivalent_to_train": 0,
+        "eval_tasks_equivalent_to_sft": 0
+      },
+      "hard": {
+        "train_tasks": 50,
+        "train_classes": 43,
+        "sft_tasks": 25,
+        "sft_classes": 24,
+        "eval_tasks": 10,
+        "eval_classes": 10,
+        "eval_tasks_equivalent_to_train": 3,
+        "eval_tasks_equivalent_to_sft": 2
+      }
+    },
+    "examples": [
+      {
+        "eval_task": "eval-4x4-hard-00000",
+        "train_task": "train-4x4-hard-00034",
+        "matching_train_tasks_in_sft": [
+          "train-4x4-hard-00034"
+        ],
+        "canonical_grid": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          2,
+          3,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  }
+}

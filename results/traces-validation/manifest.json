@@ -1,0 +1,26 @@
+{
+  "created_utc": "2026-11-03T04:17:06.515678+00:00",
+  "input_path": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafío Grupal/harness-iagen-sudoku/data/sudoku/train.jsonl",
+  "input_sha256": "fac610592e8bcdaf3d65ec2f84bf4cc4017619989cf1385be7aa0efb52a38bed",
+  "task_ids": [
+    "train-4x4-easy-00000",
+    "train-4x4-easy-00001",
+    "train-4x4-easy-00002"
+  ],
+  "model_config": {
+    "model_id": "mlx-community/Qwen3.5-9B-4bit",
+    "thinking": true,
+    "max_output_tokens": 8192,
+    "max_prompt_tokens": 2048,
+    "backend": "mlx"
+  },
+  "k": 4,
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "seed": 42,
+  "seed_derivation": "first 4 SHA256 bytes of JSON [seed, task_id, zero-based attempt], big-endian",
+  "filter": "reward(prompt, completion) == 1.0; final board and format only",
+  "pairing": "first unique accepted response with each unique rejected response of the same task",
+  "python": "3.13.12 (main, Feb 12 2026, 01:06:02) [Clang 21.1.4 ]",
+  "dry_run": true
+}

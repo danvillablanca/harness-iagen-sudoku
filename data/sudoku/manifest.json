@@ -1,0 +1,62 @@
+{
+  "generator_commit": "9c2a969",
+  "seed": 0,
+  "sizes": [
+    4,
+    6,
+    9
+  ],
+  "unique": true,
+  "counts_per_size_and_level": {
+    "train": 50,
+    "eval": 10,
+    "test": 10
+  },
+  "files": {
+    "train.jsonl": {
+      "sha256": "fac610592e8bcdaf3d65ec2f84bf4cc4017619989cf1385be7aa0efb52a38bed",
+      "records": 450,
+      "by_group": {
+        "4x4-easy": 50,
+        "4x4-medium": 50,
+        "4x4-hard": 50,
+        "6x6-easy": 50,
+        "6x6-medium": 50,
+        "6x6-hard": 50,
+        "9x9-easy": 50,
+        "9x9-medium": 50,
+        "9x9-hard": 50
+      }
+    },
+    "eval.jsonl": {
+      "sha256": "08adeed62f75d417f7085b495e0dcd2b2fb450e38347636c31803b2c081dfcf9",
+      "records": 90,
+      "by_group": {
+        "4x4-easy": 10,
+        "4x4-medium": 10,
+        "4x4-hard": 10,
+        "6x6-easy": 10,
+        "6x6-medium": 10,
+        "6x6-hard": 10,
+        "9x9-easy": 10,
+        "9x9-medium": 10,
+        "9x9-hard": 10
+      }
+    },
+    "test.jsonl": {
+      "sha256": "38f1e82fbe7c11949efac1407d37c0984d2124ede27c2b22a29d69edb7d36112",
+      "records": 90,
+      "by_group": {
+        "4x4-easy": 10,
+        "4x4-medium": 10,
+        "4x4-hard": 10,
+        "6x6-easy": 10,
+        "6x6-medium": 10,
+        "6x6-hard": 10,
+        "9x9-easy": 10,
+        "9x9-medium": 10,
+        "9x9-hard": 10
+      }
+    }
+  }
+}

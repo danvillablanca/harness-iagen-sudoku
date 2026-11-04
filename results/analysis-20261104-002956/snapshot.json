@@ -1,0 +1,9 @@
+{
+  "captured_local": "2026-11-04T00:29:56.373525-03:00",
+  "source_run": "/Users/dan/Library/Mobile Documents/com~apple~CloudDocs/2026-2/IIC3694 - Inteligencia Artificial Generativa/CICLO 2/Desafi\u0301o Grupal/harness-iagen-sudoku/results/challenge-full-20261103",
+  "samples": 3237,
+  "completed_tasks": 404,
+  "snapshot_candidate_sha256": "003495f0c9b311edd58b5998b4d23c3825a941a15920d3cda247916173cbe84b",
+  "scope": "9B teacher on train; full-run baselines not started",
+  "exports": "Reconstructed from this exact candidate prefix using frozen export_task; counts match its saved summary."
+}

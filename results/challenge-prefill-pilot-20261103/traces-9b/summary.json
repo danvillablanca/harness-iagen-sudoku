@@ -1,0 +1,97 @@
+{
+  "status": "complete",
+  "tasks_planned": 9,
+  "tasks_completed": 9,
+  "samples_planned": 36,
+  "samples": 36,
+  "accepted_samples": 3,
+  "token_limit_reached": 14,
+  "tasks_without_success": [
+    "train-4x4-hard-00000",
+    "train-6x6-easy-00000",
+    "train-6x6-medium-00000",
+    "train-6x6-hard-00000",
+    "train-9x9-easy-00000",
+    "train-9x9-medium-00000",
+    "train-9x9-hard-00000"
+  ],
+  "tasks_without_rejection": [],
+  "by_level": {
+    "4x4/easy": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 1,
+      "sft": 1,
+      "dpo": 3
+    },
+    "4x4/medium": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 2,
+      "sft": 1,
+      "dpo": 2
+    },
+    "4x4/hard": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "6x6/easy": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "6x6/medium": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "6x6/hard": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "9x9/easy": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "9x9/medium": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "9x9/hard": {
+      "tasks": 1,
+      "completed": 1,
+      "samples": 4,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    }
+  },
+  "sft_records": 2,
+  "dpo_pairs": 5,
+  "tasks_with_sft": 2,
+  "tasks_with_dpo": 2
+}

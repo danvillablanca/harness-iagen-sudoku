@@ -1,0 +1,89 @@
+{
+  "status": "incomplete",
+  "tasks_planned": 9,
+  "tasks_completed": 0,
+  "samples_planned": 36,
+  "samples": 2,
+  "accepted_samples": 0,
+  "token_limit_reached": 2,
+  "tasks_without_success": [],
+  "tasks_without_rejection": [],
+  "by_level": {
+    "4x4/easy": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 2,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "4x4/medium": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "4x4/hard": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "6x6/easy": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "6x6/medium": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "6x6/hard": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "9x9/easy": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "9x9/medium": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    },
+    "9x9/hard": {
+      "tasks": 1,
+      "completed": 0,
+      "samples": 0,
+      "accepted": 0,
+      "sft": 0,
+      "dpo": 0
+    }
+  },
+  "sft_records": 0,
+  "dpo_pairs": 0,
+  "tasks_with_sft": 0,
+  "tasks_with_dpo": 0
+}

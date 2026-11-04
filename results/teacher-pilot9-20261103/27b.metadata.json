@@ -1,0 +1,17 @@
+{
+  "model_config": {
+    "model_id": "mlx-community/Qwen3.5-27B-4bit",
+    "thinking": true,
+    "max_output_tokens": 8192,
+    "max_prompt_tokens": 2048,
+    "backend": "mlx"
+  },
+  "python": "3.13.12 (main, Feb 12 2026, 01:06:02) [Clang 21.1.4 ]",
+  "previous_completed": 0,
+  "packages": {
+    "mlx": "0.32.0",
+    "mlx-lm": "0.31.3",
+    "transformers": "5.18.0"
+  },
+  "load_seconds": 12.037830332992598
+}

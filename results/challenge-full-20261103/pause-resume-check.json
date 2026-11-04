@@ -1,0 +1,26 @@
+{
+  "before": {
+    "traces-9b/candidates.jsonl": {
+      "bytes": 2714636,
+      "sha256": "b65a5b05efbc99eed76c74e78c95c702691b347848eb4554e7da2992711ab284",
+      "samples": 1247
+    }
+  },
+  "launch_before": 823,
+  "paused": {
+    "status": "paused",
+    "checkpoint_after": {
+      "traces-9b/summary.json": 1248
+    }
+  },
+  "after": {
+    "samples": 1251,
+    "saved_prefixes_unchanged": true,
+    "duplicates": 0,
+    "rewards_verified": true,
+    "seeds_verified": true,
+    "frozen_source_and_input_unchanged": true,
+    "launch_pid": 88048,
+    "launch_attempt": 2
+  }
+}

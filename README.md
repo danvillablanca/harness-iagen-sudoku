@@ -128,7 +128,7 @@ solución.
 
 ```sh
 python Laboratorio/Qwen3.5/dataset.py --out data/sudoku
-python Laboratorio/Qwen3.5/dataset.py --sizes 9 --train 200 --eval 50 --test 50 --seed 1
+python Laboratorio/Qwen3.5/dataset.py --out data/sudoku9 --sizes 9 --train 200 --eval 50 --test 50 --seed 1
 ```
 
 | Argumento | Descripción | Por defecto |
@@ -149,47 +149,284 @@ cambia `eval` ni `test`. `reward(record["prompt"], respuesta)` funciona
 directamente, y `case_from_record(record)` entrega un `PromptCase` para
 `evaluate` y `print_result`.
 
-Tests (sin dependencias adicionales):
+Tests (con las dependencias del proyecto):
 
 ```sh
 python -m unittest discover -s Laboratorio/Qwen3.5 -p "test_*.py"
 ```
 
-## Línea base (pass@1 y pass@k)
+## Pasos 3 y 4 del Desafío: datos derivados y línea base
 
-`Laboratorio/Qwen3.5/baseline.py` genera `n` respuestas por tarea con
-muestreo (en un solo batch con PyTorch), las puntúa con `reward` y guarda una
-línea JSON por muestra en `results/<modelo>-<thinking|nothinking>.jsonl`.
-Si se interrumpe, al repetir el mismo comando continúa desde donde quedó;
-con otros parámetros de muestreo sobre el mismo archivo, se detiene con un error.
+El paso 3 prepara datos para entrenar después: **el 9B es el profesor y el 2B
+es el modelo objetivo**. No se ajustan pesos en esta entrega. `origin/baseline`
+de Lilly aporta el estimador pass@k y el muestreo múltiple; esta integración añade
+procedencia, reanudación por intento, auditoría y ejecución de ambos pasos.
+
+### Ejecutar el flujo en el Mac
 
 ```sh
-python Laboratorio/Qwen3.5/dataset.py --out data/sudoku
-python Laboratorio/Qwen3.5/baseline.py run --tasks data/sudoku/eval.jsonl \
-    --model-id Qwen/Qwen3.5-2B --no-thinking --per-level 5 --n 8
-python Laboratorio/Qwen3.5/baseline.py summary results/*.jsonl --out results/summary.json
+source .venv/bin/activate
+python -m pip install -r requirements.txt -r Laboratorio/Qwen3.5/requirements-mlx.txt
+# Solo si todavía no existe esta carpeta; el generador evita sobrescribir datasets.
+python Laboratorio/Qwen3.5/dataset.py --out data/sudoku-final --response-style final
+# 9 tareas de train y 9 de eval: una por tamaño/nivel, 4 respuestas por tarea.
+HF_HUB_OFFLINE=1 python Laboratorio/Qwen3.5/challenge.py --out results/mi-piloto
+# Reanudar con TODOS los mismos argumentos, agregando --resume:
+HF_HUB_OFFLINE=1 python Laboratorio/Qwen3.5/challenge.py --out results/mi-piloto --resume
 ```
 
-| Argumento de `run` | Descripción | Por defecto |
-| --- | --- | --- |
-| `--tasks FILE` | JSONL de `dataset.py` | requerido |
-| `--model-id ID` | Modelo de Hugging Face | `Qwen/Qwen3.5-2B` |
-| `--thinking` / `--no-thinking` | Modo de razonamiento | desactivado |
-| `--n N` | Muestras por tarea | 8 |
-| `--batch-size N` | Muestras generadas a la vez (bajar si falta memoria) | 8 |
-| `--max-output-tokens N` | Límite de tokens por muestra | 2048 |
-| `--temperature`, `--top-p` | Muestreo | 0.7 / 0.8 sin thinking; 0.6 / 0.95 con thinking |
-| `--per-level N` | Primeras N tareas por tamaño y nivel | todas |
-| `--sizes N...` | Filtrar tamaños de tablero | todos |
-| `--seed N` | Semilla del muestreo | 0 |
-| `--out DIR` | Carpeta de resultados | `results` |
+`challenge.py` ejecuta secuencialmente: trazas del 9B sobre train → baseline del
+9B sobre eval → baseline del 2B sobre las mismas tareas de eval → auditoría sin
+modelos. Cada modelo vive en su propio proceso y se libera antes del siguiente.
+Usa los pesos originales `Qwen/Qwen3.5-2B` y los ya instalados de
+`mlx-community/Qwen3.5-9B-4bit`; no contempla el 27B. `HF_HUB_OFFLINE=1` impide
+nuevas descargas. El tamaño y la precisión cambian a la vez: esta comparación
+mide esas dos configuraciones, no aísla el efecto del número de parámetros.
 
-`summary` imprime una tabla Markdown por modelo, modo, tamaño y nivel con
-pass@k (estimador insesgado de Chen et al., 2021: `1 - C(n-c, k) / C(n, k)`,
-promediado sobre tareas), el porcentaje de respuestas cortadas por el límite de
-tokens y los tokens promedio. pass@k solo se calcula para tareas con al menos
-`k` muestras.
+El piloto utiliza temperatura 0.7, top-p 0.8, top-k 20, penalización de presencia
+1.5, semilla 42, `thinking=False` y un máximo de 1024 tokens. Son parámetros
+explícitos de este experimento, con muestreo positivo para obtener diversidad.
+La [ficha oficial de Qwen](https://huggingface.co/Qwen/Qwen3.5-9B#best-practices)
+describe los parámetros de inferencia y su efecto sobre la repetición.
 
-## Pendientes
+La variante `--response-style final` conserva exactamente los puzzles generados
+con la misma semilla y pide solo el tablero final. El pipeline además usa
+`--answer-prefix`: añade `<answer>\n[` al inicio del turno del asistente.
+Este prefijo **solo fija formato**; todos los valores de las celdas y el cierre
+son generados por el modelo. Se contabiliza como entrada, no como tokens generados.
+`completion` contiene la respuesta completa (prefijo más continuación) que evalúa
+el verificador. La configuración y el código quedan registrados en el manifiesto.
+Por ello son métricas del modelo con este harness y este prefijo. No deben mezclarse
+con las corridas previas sin prefijo, con thinking o con otros presupuestos de tokens.
+Las trazas de este modo son respuestas verificadas, no cadenas de pensamiento validadas.
 
-Ver [TODO.md](TODO.md).
+Para ampliar la muestra sin usar el conjunto test para ajustar decisiones:
+
+```sh
+# 5 tareas por tamaño/nivel y 8 respuestas: 45 tareas por modelo.
+python Laboratorio/Qwen3.5/challenge.py --out results/calibracion-eval \
+    --per-level 5 --samples 8
+# Todas las tareas train/eval, 8 respuestas por tarea: corrida larga, reanudable.
+python Laboratorio/Qwen3.5/challenge.py --out results/completo --profile full
+```
+
+`--dry-run` verifica y muestra el plan sin cargar pesos ni crear resultados.
+`--split test` permite la evaluación final una vez fijado el protocolo; conservar
+`eval` para calibrar. El piloto no sustituye una evaluación amplia ni demuestra
+que las etiquetas easy/medium/hard estén calibradas.
+
+### Archivos derivados del profesor
+
+`traces.py` acepta exclusivamente tareas de train, sin IDs o prompts duplicados.
+El modelo recibe el prompt público; nunca la solución de referencia. Guarda cada
+intento antes de exportar y reconstruye los archivos derivados al reanudar.
+
+```sh
+python Laboratorio/Qwen3.5/traces.py --input data/sudoku-final/train.jsonl \
+    --out results/trazas-9b --model mlx-community/Qwen3.5-9B-4bit --backend mlx \
+    --per-level 1 --k 4 --no-thinking --answer-prefix --max-output-tokens 1024
+```
+
+- `manifest.json`: hash de entrada, tareas, modelo y revisión de caché, parámetros,
+  versiones, hashes del código y procedimiento de filtrado.
+- `candidates.jsonl`: todos los intentos, recompensa, diagnóstico de formato,
+  verificaciones, semillas, tokens y tiempos. No se eliminan fallos.
+- `sft.jsonl`: prompt y completion verificada, identificadores de procedencia y
+  `messages` de chat. Elimina textos idénticos dentro de cada tarea.
+- `dpo.jsonl`: prompt, chosen, rejected y IDs; la primera correcta se combina con
+  cada incorrecta distinta de la **misma** tarea. No inventa rechazos ni soluciones.
+- `summary.json`: cobertura por tamaño/nivel, trazas, pares, truncamientos y tareas
+  completas sin éxito o sin rechazo. Cero pares DPO significa que falta diversidad.
+
+Repetir el mismo comando con `--resume` continúa desde el intento pendiente.
+`--resume --export-only` reconstruye los derivados sin cargar pesos y vuelve a
+verificar las recompensas guardadas. Una escritura final truncada se respalda en
+`.partial` antes de recuperarse; un JSON completo corrupto provoca error.
+Cambiar datos, parámetros, código relevante o entorno exige una carpeta nueva.
+Las semillas se derivan de SHA256(seed, task_id, intento); reanudar no las cambia.
+No se garantiza identidad numérica entre hardware o versiones diferentes.
+
+Con thinking habilitado (sin prefijo), se restaura `<think>` en los exports si
+la plantilla lo puso en el prompt y la continuación solo contiene `</think>`.
+Se conserva la respuesta original en candidatos. La recompensa comprueba únicamente
+el tablero final y el contrato de formato, no cada paso de razonamiento.
+
+### Métricas de varios modelos
+
+`baseline.py` solo acepta eval o test, genera intentos independientes con
+checkpoint individual y registra el mismo protocolo por modelo. La modalidad
+por lotes de Lilly se conserva en `Qwen.generate_samples`; el baseline usa una
+muestra por llamada para que las semillas no dependan del lote o la reanudación.
+
+```sh
+python Laboratorio/Qwen3.5/baseline.py run --tasks data/sudoku-final/eval.jsonl \
+    --model-id Qwen/Qwen3.5-2B --backend mlx --no-thinking --answer-prefix \
+    --per-level 1 --n 4 --seed 42 --max-output-tokens 1024 --out results/baseline
+python Laboratorio/Qwen3.5/baseline.py summary results/baseline/*.jsonl \
+    --k 1 2 4 --out results/baseline/metrics.json
+```
+
+Para n intentos y c aciertos, se estima `pass@k = 1 - C(n-c,k)/C(n,k)`,
+con k ≤ n, y se promedia **por tarea**, según
+[Chen et al. (2021)](https://arxiv.org/abs/2107.03374).
+`pass@1 = c/n` es éxito esperado con muestreo; no significa greedy ni solo el
+primer intento. `pass@n` equivale a la fracción de tareas con al menos un acierto.
+Los textos repetidos sí cuentan como intentos en estas métricas.
+
+Se incluyen solamente tareas con los n intentos planificados completos. Cada
+columna lleva su denominador (`tasks@k`); también se muestra completadas/planificadas
+y `provisional` si faltan tareas. Las corridas con distintas configuraciones o
+identificadores se mantienen separadas. Duplicar un archivo de resultados al
+agregarlo es un error, no aumenta artificialmente la muestra.
+
+El pipeline genera `metrics.json`, `metrics.md`, `audit.json` y
+`pipeline-status.json`. La auditoría vuelve a ejecutar reward sobre candidatos,
+SFT, ambos miembros de cada par DPO y muestras de baseline; comprueba además que
+los modelos se evaluaron sobre el mismo conjunto. `complete` es relativo al
+alcance seleccionado: un piloto completo sigue siendo un piloto.
+
+Las señales `zero_success`, `ceiling` y `mixed_success` describen lo observado.
+No prueban dificultad intrínseca. Para calibrar, ampliar eval, separar errores
+matemáticos de formato/truncamiento y buscar niveles donde el 2B tenga éxitos
+y fallos. El dataset evita duplicados exactos, pero no todas las equivalencias
+por permutaciones/simetrías del Sudoku.
+
+## Corrida completa verificada el 4 de noviembre de 2026
+
+La corrida [challenge-full-20261103](results/challenge-full-20261103) terminó
+con **5.040 respuestas**: 450 tareas de train × 8 candidatos del 9B y 90 tareas
+de eval × 8 respuestas por modelo. La [auditoría de entrega](results/challenge-full-20261103/delivery-audit.json)
+reverificó las recompensas, los pares DPO y los exports, sin duplicados de intentos
+ni muestras faltantes. Test sigue reservado; no se entrenaron pesos.
+
+| Modelo | pass@1 | pass@2 | pass@4 | pass@8 |
+| --- | ---: | ---: | ---: | ---: |
+| Qwen3.5-2B original | 6.94% | 9.33% | 12.30% | 15.56% |
+| Qwen3.5-9B MLX 4-bit | 17.22% | 24.29% | 32.67% | 40.00% |
+
+Son promedios macro sobre las mismas 90 tareas de eval, con 10 tareas por
+tamaño/nivel. El 2B obtuvo 50 respuestas correctas de 720 y resolvió 14 tareas
+al menos una vez; el 9B obtuvo 124 de 720 y resolvió 36 tareas. El detalle por
+grupo está en [metrics.md](results/challenge-full-20261103/metrics.md).
+
+El profesor 9B produjo 566 candidatos correctos de 3.600. Tras el filtro y la
+deduplicación por tarea, quedaron **161 ejemplos SFT de 161 tareas** y **600 pares
+DPO de 137 tareas**. No hubo éxitos en train 6x6 hard ni 9x9 hard; 9x9 medium
+aportó solo un ejemplo SFT. Las respuestas aceptadas contienen el tablero final,
+sin una explicación de razonamiento: se usó `--no-thinking --answer-prefix`.
+Los pares son preferencias sintéticas del verificador, no etiquetas humanas.
+
+La corrida terminó, pero la cobertura sigue limitada: 289/450 tareas de train
+no produjeron una respuesta correcta y el 9B alcanzó el límite de tokens en
+1.197/3.600 candidatos y 268/720 respuestas de eval. Tamaño y cuantización difieren
+entre modelos; esta comparación no aísla solo el número de parámetros. La
+[revisión de simetrías 4x4](results/analysis-20261104-002956/symmetry-audit.json)
+encontró equivalencias train/eval en 3/10 tareas de 4x4 hard (2/10 con SFT).
+No hay duplicados exactos, pero deberán revisarse estas equivalencias antes de
+atribuir a un ajuste futuro generalización a estructuras nuevas.
+
+La [guía de entrega](results/challenge-full-20261103/ENTREGA_EQUIPO.md) reúne
+cobertura, archivos principales, protocolo, limitaciones y ejemplos reales.
+`source/` e `input/` dentro de la corrida conservan el código y los datos usados.
+Los pilotos y el análisis intermedio permanecen separados de los resultados finales.
+
+## Piloto ejecutado el 3 de noviembre de 2026
+
+Artifacts en [results/challenge-prefill-pilot-20261103](results/challenge-prefill-pilot-20261103).
+Se usaron 9 tareas de train y otras 9 de eval (una por tamaño/nivel), con 4
+intentos por tarea. Es un piloto; cada celda tamaño/nivel contiene una sola tarea.
+
+| Modelo | pass@1 | pass@2 | pass@4 |
+| --- | ---: | ---: | ---: |
+| Qwen3.5-2B original | 5.56% | 11.11% | 22.22% |
+| Qwen3.5-9B MLX 4-bit | 22.22% | 31.48% | 44.44% |
+
+Estos promedios macro usan las 9 tareas completas de eval. El detalle por tamaño
+y nivel está en [metrics.md](results/challenge-prefill-pilot-20261103/metrics.md),
+y los datos de la auditoría en [audit.json](results/challenge-prefill-pilot-20261103/audit.json).
+El 2B tuvo un acierto de cuatro intentos en 4x4 fácil y otro en 6x6 fácil;
+las otras siete tareas tuvieron cero aciertos. Es evidencia inicial de señal
+para esas dos tareas, insuficiente para generalizar a todo un nivel.
+
+El profesor generó 36 candidatos de train, de los cuales 3 fueron aceptados:
+quedaron [2 trazas SFT distintas](results/challenge-prefill-pilot-20261103/traces-9b/sft.jsonl)
+y [5 pares DPO](results/challenge-prefill-pilot-20261103/traces-9b/dpo.jsonl).
+Las trazas SFT corresponden solo a 4x4 fácil y medio; falta ampliar volumen y
+cobertura. La auditoría revalidó todas las recompensas y exports. La reanudación
+del pipeline terminado se comprobó sin cargar modelos ni añadir candidatos.
+
+Los primeros ensayos sin prefill están conservados como corridas incompletas en
+`results/challenge-pilot-20261103` y `results/challenge-final-pilot-20261103`.
+Se interrumpieron al observar explicaciones que agotaban el presupuesto. No forman
+parte de esta línea base ni se combinaron sus muestras con el protocolo final.
+
+## Progreso en terminal
+
+`progress.py` muestra barras, porcentajes y contadores leyendo los checkpoints;
+no importa modelos. Sus controles de pausa/reanudación operan sobre el lanzador
+y los procesos de la corrida. La ventana es independiente de la
+corrida: cerrarla o presionar `q` no detiene la generación.
+
+```sh
+python Laboratorio/Qwen3.5/progress.py --run results/challenge-full-20261103
+```
+
+Se actualiza cada dos segundos. Teclas: `1` resumen, `2` SFT/DPO por tamaño y
+nivel, `3` pass@1/2/4/8 por modelo/tamaño/nivel, `4` log; flechas para desplazar
+vistas largas. `--once` imprime una instantánea sin pantalla interactiva.
+
+**`P` pausa y `R` reanuda.** `P` solicita una pausa persistente: espera el siguiente
+checkpoint de una respuesta, detiene la inferencia y libera la memoria del modelo.
+Esperar a que aparezca **PAUSED** antes de apagar el Mac. La pausa se conserva en
+`control.json`, incluso tras reiniciar; el seguimiento automático y el lanzador
+respetan esa decisión. `R` reanuda desde el siguiente intento pendiente con los mismos
+datos, parámetros y semillas. Si la pausa todavía está esperando una respuesta,
+`R` cancela la solicitud. Una vez que está deteniendo procesos, esperar a PAUSED.
+
+La unidad de recuperación es una **respuesta completa**, no un token. El controlador
+externo puede interrumpir el inicio del intento siguiente; ese intento aún no guardado
+se repite con su semilla original. Nunca se repiten ni sobrescriben respuestas guardadas.
+Cerrar la ventana conserva el estado actual de ejecución o pausa.
+
+También se puede controlar desde otra terminal, en la raíz del repositorio:
+
+```sh
+python Laboratorio/Qwen3.5/run_control.py pause
+python Laboratorio/Qwen3.5/run_control.py status
+python Laboratorio/Qwen3.5/run_control.py resume
+```
+
+Los tres comandos aceptan `--run DIRECTORIO`. El controlador es externo al código
+congelado de inferencia y no modifica el protocolo experimental. Verifica PID y
+fecha de creación, detecta hijos huérfanos y rechaza lanzar una segunda inferencia.
+Una pausa intencional bloquea `launch.py --resume`; usar `R` o el comando anterior
+para indicar explícitamente que se desea continuar.
+
+Los 3.600 candidatos y las 1.440 respuestas de evaluación son metas; las barras
+cuentan intentos efectivamente guardados. Las 72 métricas son cuatro valores de
+pass@k para cada uno de los 18 grupos modelo/tamaño/nivel. Se distinguen valores
+pendientes (`--`), provisionales y finales; un 0% calculado no significa que
+falte la métrica. SFT cuenta respuestas correctas distintas; DPO cuenta pares
+verificados, por lo que sus cantidades no tienen una meta garantizada.
+
+El lanzador para la corrida actual es
+`results/challenge-full-20261103/Live Progress.command` (doble clic en Finder).
+
+## Comparador exploratorio anterior
+
+`compare_models.py` sigue disponible para los experimentos anteriores sobre
+puzzles 9x9 resolubles por candidatos únicos y grupos de vacíos. Solo mide un
+intento por problema; usar `baseline.py` para pass@k y los splits del Desafío.
+Acepta `--resume DIRECTORIO` y recupera la configuración del manifiesto.
+No mezclar sus resultados con la línea base estratificada del pipeline.
+
+## Verificación y pendientes
+
+```sh
+python -m unittest discover -s Laboratorio/Qwen3.5 -p 'test_*.py'
+```
+
+Las pruebas no descargan pesos. Las del backend MLX requieren las dependencias
+MLX de Mac; el resto prueba muestreo, estimador, reanudación y verificación con
+respuestas controladas. Ver [TODO.md](TODO.md) para distinguir implementación,
+datos efectivamente generados y evidencia experimental pendiente.
