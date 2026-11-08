@@ -1,37 +1,104 @@
 \section{Resultados de la línea base}
 \label{sec:resultados}
 
-\guia{Completar la tabla con mediciones reales de cada modelo y nivel.
-$N$ es el número de problemas, $n$ las muestras por problema y $k$ el
-número de intentos de la métrica. Si hay varios valores de $k$, añadir
-filas o columnas identificadas. Los campos vacíos no representan cero.}
+La tabla~\ref{tab:global} resume ambos modelos sobre las mismas 90 tareas
+de validación, y la tabla~\ref{tab:lineabase} desglosa los resultados por
+tamaño de tablero y nivel. Cada grupo contiene $N = 10$ tareas con
+$n = 8$ respuestas por tarea.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Resultados por modelo y nivel de dificultad.}
-  \label{tab:lineabase}
-  \begin{tabularx}{\linewidth}{@{}Ylccccc@{}}
+  \caption{Resultados globales sobre las 90 tareas de validación
+  (promedio macro, en porcentaje).}
+  \label{tab:global}
+  \begin{tabularx}{\linewidth}{@{}Yccccccc@{}}
     \toprule
-    Modelo & Dificultad & $N$ & $n$ & $k$ & \passuno & \passk \\
+    Modelo & \passuno & \texttt{pass@2} & \texttt{pass@4} & \texttt{pass@8}
+      & Correctas & Tareas resueltas & Truncadas \\
     \midrule
-    Objetivo & Básica & \valor & \valor & \valor & \valor & \valor \\
-    Objetivo & Intermedia & \valor & \valor & \valor & \valor & \valor \\
-    Objetivo & Alta & \valor & \valor & \valor & \valor & \valor \\
-    \midrule
-    Comparación 1 & Básica & \valor & \valor & \valor & \valor & \valor \\
-    Comparación 1 & Intermedia & \valor & \valor & \valor & \valor & \valor \\
-    Comparación 1 & Alta & \valor & \valor & \valor & \valor & \valor \\
-    \midrule
-    Comparación 2 & Básica & \valor & \valor & \valor & \valor & \valor \\
-    Comparación 2 & Intermedia & \valor & \valor & \valor & \valor & \valor \\
-    Comparación 2 & Alta & \valor & \valor & \valor & \valor & \valor \\
+    Qwen3.5-2B & 6,9 & 9,3 & 12,3 & 15,6 & 50/720 & 14/90 & 0,7 \\
+    Qwen3.5-9B 4 bits & 17,2 & 24,3 & 32,7 & 40,0 & 124/720 & 36/90 & 37,2 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\pendiente{comparar modelos y niveles, describir el efecto de aumentar
-los intentos e identificar patrones que requieran explicación.}
+\begin{table}[htbp]
+  \centering\small
+  \caption{Resultados por modelo, tamaño de tablero y nivel (en
+  porcentaje). $N = 10$ tareas y $n = 8$ respuestas por grupo.
+  \emph{Trunc.}: respuestas que alcanzaron el límite de 1.024 tokens.}
+  \label{tab:lineabase}
+  \begin{tabularx}{\linewidth}{@{}Yllccccc@{}}
+    \toprule
+    Modelo & Tablero & Nivel & \passuno & \texttt{pass@2} & \texttt{pass@4}
+      & \texttt{pass@8} & Trunc. \\
+    \midrule
+    Qwen3.5-2B & 4x4 & easy   & 23,8 & 32,5 & 42,1 & 50,0 & 1,3 \\
+               & 4x4 & medium & 30,0 & 34,6 & 37,9 & 40,0 & 1,3 \\
+               & 4x4 & hard   &  2,5 &  4,6 &  7,9 & 10,0 & 1,3 \\
+               & 6x6 & easy   &  5,0 &  9,6 & 17,9 & 30,0 & 1,3 \\
+               & 6x6 & medium &  1,3 &  2,5 &  5,0 & 10,0 & 1,3 \\
+               & 6x6 & hard   &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
+               & 9x9 & easy   &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
+               & 9x9 & medium &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
+               & 9x9 & hard   &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
+    \midrule
+    Qwen3.5-9B & 4x4 & easy   & 68,8 & 83,9 & 95,6 & 100,0 &  5,0 \\
+    4 bits     & 4x4 & medium & 40,0 & 55,4 & 76,3 & 100,0 & 12,5 \\
+               & 4x4 & hard   & 12,5 & 22,5 & 36,4 &  50,0 & 35,0 \\
+               & 6x6 & easy   & 18,8 & 29,6 & 41,4 &  50,0 & 25,0 \\
+               & 6x6 & medium &  5,0 &  8,9 & 14,3 &  20,0 & 45,0 \\
+               & 6x6 & hard   &  0,0 &  0,0 &  0,0 &   0,0 & 67,5 \\
+               & 9x9 & easy   &  8,8 & 15,7 & 25,0 &  30,0 & 21,3 \\
+               & 9x9 & medium &  1,3 &  2,5 &  5,0 &  10,0 & 43,8 \\
+               & 9x9 & hard   &  0,0 &  0,0 &  0,0 &   0,0 & 80,0 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
 
-\guia{Indicar la incertidumbre de las mediciones cuando se disponga
-de ella. Si se informa una métrica global, conservar el desglose por
-dificultad solicitado por el curso.}
+\paragraph{Comparación entre modelos.}
+El modelo de 9B supera al objetivo en todas las métricas globales:
+\passuno\ de 17,2\,\% frente a 6,9\,\% y \texttt{pass@8} de 40,0\,\%
+frente a 15,6\,\%. También resuelve al menos una vez más del doble de
+tareas (36 frente a 14 de 90). El 9B obtiene valores iguales o
+superiores en todos los grupos y métricas; la brecha es menor en 4x4
+\emph{medium} (\passuno\ de 30,0\,\% frente a 40,0\,\%) y en 6x6
+\emph{medium} (\texttt{pass@8} de 10,0\,\% frente a 20,0\,\%).
+
+\paragraph{Efecto del tamaño y del nivel.}
+El tamaño del tablero es el factor dominante. El 2B solo acierta en 4x4 y
+en 6x6 \emph{easy} y \emph{medium}; no obtiene ningún acierto en 6x6
+\emph{hard} ni en ningún nivel de 9x9. El 9B extiende los aciertos a
+9x9 \emph{easy} y \emph{medium}, pero tampoco resuelve 6x6 \emph{hard} ni
+9x9 \emph{hard}. Dentro de cada tamaño, el desempeño disminuye en general
+al aumentar el nivel; la excepción es el 2B en 4x4, donde \emph{medium}
+supera a \emph{easy} en \passuno\ (30,0\,\% frente a 23,8\,\%). Con 10
+tareas por grupo, esta inversión puede deberse a la variabilidad de la
+muestra.
+
+\paragraph{Efecto de aumentar los intentos.}
+Pasar de $k = 1$ a $k = 8$ multiplica el valor global por 2,2 en el 2B
+y por 2,3 en el 9B. El aumento indica que, en varias tareas, los
+modelos aciertan en algunos intentos y fallan en otros: por ejemplo, el
+2B en 6x6 \emph{easy} pasa de 5,0\,\% a 30,0\,\%. En cambio, en 4x4
+\emph{medium} el 2B casi no mejora con más intentos (30,0\,\% a
+40,0\,\%), lo que sugiere que acierta de forma consistente en pocas
+tareas y falla de forma consistente en las demás.
+
+\paragraph{Respuestas truncadas.}
+Los modelos fallan de forma distinta. El 2B casi nunca alcanza el límite
+de tokens (0,7\,\% de sus respuestas) y en 9x9 entrega siempre un tablero
+con el formato requerido, pero incorrecto; sus errores se deben al
+contenido del tablero y no al presupuesto de tokens. El 9B, en cambio,
+alcanza el límite en el 37,2\,\% de sus respuestas, y esta proporción
+crece con la dificultad hasta el 80,0\,\% en 9x9 \emph{hard}. Parte de
+los fallos del 9B se explican, por tanto, por el límite de 1.024 tokens,
+y sus resultados en los niveles difíciles deben leerse como una cota
+inferior bajo este presupuesto.
+
+\paragraph{Incertidumbre.}
+Cada grupo contiene solo 10 tareas, por lo que una tarea representa
+10 puntos porcentuales de \texttt{pass@8}. Las diferencias pequeñas entre
+grupos, como la inversión entre \emph{easy} y \emph{medium} del 2B en
+4x4, no deben interpretarse como diferencias de dificultad establecidas.
+Se usó una sola semilla base y no se calcularon intervalos de confianza.
