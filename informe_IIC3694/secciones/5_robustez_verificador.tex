@@ -46,26 +46,26 @@ continuación.
     \midrule
     Solución correcta precedida de explicaciones, grillas intermedias o
       razonamiento entre \texttt{<think>} (4 casos)
-      & Aceptar & \dato & P1 \\
+      & Aceptar & Aceptada (4/4) & P1 \\
     Soluciones válidas distintas de la de referencia (4 casos)
-      & Aceptar & \dato & P6 \\
+      & Aceptar & Aceptada (4/4) & P6 \\
     Copia del puzzle sin resolver; números renombrados que respetan filas,
       columnas y bloques, pero alteran las pistas (2 casos)
-      & Rechazar & \dato & P4 \\
+      & Rechazar & Rechazada (2/2) & P4 \\
     Dos bloques de respuesta; respuesta oculta en el razonamiento;
       razonamiento sin cerrar (3 casos)
-      & Rechazar & \dato & P2 \\
+      & Rechazar & Rechazada (3/3) & P2 \\
     Texto posterior a la respuesta, etiquetas en mayúsculas o anidadas
       (3 casos)
-      & Rechazar & \dato & P2 \\
+      & Rechazar & Rechazada (3/3) & P2 \\
     Valores no enteros o fuera de rango (\texttt{true}, \texttt{8.0},
       \texttt{"8"}, \texttt{null}, $-1$, 0, 10), grillas de forma incorrecta
       o con un solo número repetido y respuesta no textual (11 casos)
-      & Rechazar & \dato & P3 \\
+      & Rechazar & Rechazada (11/11) & P3 \\
     Solución correcta sin etiquetas o dentro de un bloque Markdown (2 casos)
-      & Política: rechazar por formato & \dato & P5 \\
+      & Política: rechazar por formato & Rechazada (2/2) & P5 \\
     Prompt sin puzzle válido (1 caso)
-      & Error de configuración & \dato & P7 \\
+      & Error de configuración & Error (1/1) & P7 \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -92,10 +92,13 @@ ambos miembros de cada par DPO. Esta auditoría verifica la consistencia
 de los valores registrados, no la ausencia de errores del verificador.
 
 \subsection{Vulnerabilidades y limitaciones}
-Las pruebas de la tabla~\ref{tab:robustez} se diseñaron para detectar
-respuestas incorrectas aceptadas (falsos positivos) y respuestas correctas
-rechazadas (falsos negativos). \dato: resultado de su ejecución y número
-de casos fallidos, si los hubo.
+Las 7 pruebas de la tabla~\ref{tab:robustez}, con sus 30 casos, se
+ejecutaron sin fallos: entre los casos probados, el verificador no aceptó
+ninguna respuesta incorrecta (falsos positivos) ni rechazó ninguna
+solución válida que cumpliera el formato (falsos negativos). Además, al
+clasificar los errores de la sección~\ref{sec:cualitativo} se volvió a
+calcular la recompensa de las 1.440 respuestas de la línea base, y todas
+coincidieron con los valores registrados.
 
 Los falsos negativos existen por decisión de diseño. Una solución
 matemáticamente correcta recibe 0 si no respeta el contrato de formato:
