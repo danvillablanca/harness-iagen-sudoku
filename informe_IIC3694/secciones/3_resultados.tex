@@ -91,10 +91,11 @@ de tokens (0,7\,\% de sus respuestas) y en 9x9 entrega siempre un tablero
 con el formato requerido, pero incorrecto; sus errores se deben al
 contenido del tablero y no al presupuesto de tokens. El 9B, en cambio,
 alcanza el límite en el 37,2\,\% de sus respuestas, y esta proporción
-crece con la dificultad hasta el 80,0\,\% en 9x9 \emph{hard}. Parte de
-los fallos del 9B se explican, por tanto, por el límite de 1.024 tokens,
-y sus resultados en los niveles difíciles deben leerse como una cota
-inferior bajo este presupuesto.
+crece con la dificultad hasta el 80,0\,\% en 9x9 \emph{hard}. Sin
+embargo, el límite no oculta respuestas correctas: en 242 de esas 268
+respuestas, el modelo ya había cerrado un bloque de respuesta sin una
+solución válida y siguió escribiendo para corregirse
+(sección~\ref{sec:cualitativo}).
 
 \paragraph{Incertidumbre.}
 Cada grupo contiene solo 10 tareas, por lo que una tarea representa

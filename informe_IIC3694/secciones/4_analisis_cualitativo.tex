@@ -1,30 +1,147 @@
 \section{Análisis cualitativo de fortalezas y debilidades}
 \label{sec:cualitativo}
 
-\guia{Seleccionar ejemplos reales y representativos de aciertos y
-errores. Para cada uno, registrar modelo, nivel, identificador de
-instancia, prompt, respuesta esperada, respuesta generada y juicio
-del verificador. Incluir trazas de herramientas cuando sean relevantes.}
+\subsection{Clasificación de las respuestas}
+Para identificar el origen de los errores se clasificaron las 1.440
+respuestas de la línea base (720 por modelo) en categorías excluyentes,
+asignadas en el orden de la tabla~\ref{tab:errores}: primero las
+correctas; luego las que alcanzaron el límite de tokens; las que no
+cumplen el contrato de formato; las que copian el puzzle sin cambios; las
+que dejan casillas vacías; las que alteran alguna pista original, y, por
+último, las grillas completas con las pistas intactas que no cumplen las
+reglas. La clasificación se obtuvo volviendo a evaluar cada respuesta con
+el verificador; las 1.440 recompensas recalculadas coinciden con las
+registradas durante la corrida.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Clasificación de las respuestas de la línea base por modelo y
+  tamaño de tablero (240 respuestas por fila: 30 tareas por 8 respuestas).}
+  \label{tab:errores}
+  \begin{tabularx}{\linewidth}{@{}llYYYYYYY@{}}
+    \toprule
+    Modelo & Tablero & Correcta & Truncada & Formato & Copia el puzzle
+      & Deja vacías & Altera pistas & Grilla inválida \\
+    \midrule
+    2B & 4x4 & 45 &   3 & 10 &  5 & 104 &  7 &  66 \\
+       & 6x6 &  5 &   2 &  4 &  6 &  92 &  5 & 126 \\
+       & 9x9 &  0 &   0 &  0 & 15 & 179 & 12 &  34 \\
+       & Total & 50 & 5 & 14 & 26 & 375 & 24 & 226 \\
+    \midrule
+    9B & 4x4 & 97 &  42 &  4 &  0 &  15 & 41 &  41 \\
+       & 6x6 & 19 & 110 &  0 &  0 &  24 &  9 &  78 \\
+       & 9x9 &  8 & 116 &  0 &  0 &  52 &  7 &  57 \\
+       & Total & 124 & 268 & 4 & 0 & 91 & 57 & 176 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Los dos modelos fallan de forma distinta. El error más frecuente del 2B es
+entregar un tablero con casillas sin llenar: ocurre en 375 de sus 720
+respuestas (52\,\%) y en 179 de las 240 de 9x9. En la mediana de estos
+casos, el modelo deja sin completar entre el 14\,\% y el 33\,\% de las
+casillas vacías, según el tamaño, y además copia el puzzle sin
+modificarlo en otras 26 respuestas. Es decir, el 2B casi siempre respeta
+el formato, pero con frecuencia no completa la tarea. El 9B rara vez
+deja casillas vacías en 4x4 y 6x6; sus fallos se concentran en las
+respuestas truncadas (268) y en las grillas completas que no cumplen las
+reglas (176).
+
+Las respuestas truncadas del 9B no ocultan soluciones correctas. En 242
+de las 268, el modelo ya había cerrado el bloque de respuesta y continuó
+escribiendo, por lo general tras detectar un error y empezar a resolver
+de nuevo, contra la instrucción de no escribir después de la respuesta.
+En ninguno de esos 242 casos el primer bloque contenía una solución
+válida: 218 tenían una grilla incorrecta y 24, un contenido que no es una
+matriz interpretable. Además, cualquier texto posterior al bloque, como
+una nueva respuesta, es rechazado por el verificador. Las 26 respuestas
+truncadas restantes se cortaron antes de cerrar el bloque.
+
+Por último, las grillas incorrectas que se pueden interpretar contienen
+una fracción relevante de valores correctos: en la mediana, entre el
+22\,\% y el 33\,\% de las casillas vacías coinciden con la solución en
+el 2B, y entre el 37\,\% y el 43\,\% en el 9B, según el tamaño. Una
+recompensa binaria asigna 0 a todas estas respuestas por igual.
 
 \subsection{Ejemplo de acierto y fortaleza observada}
-\textbf{Modelo, nivel e instancia:} \dato
+Los ejemplos de esta sección se eligieron para ilustrar las categorías
+más frecuentes de la tabla~\ref{tab:errores}; no son una muestra
+aleatoria.
 
-\textbf{Problema y respuesta esperada:} \dato
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 \emph{easy},
+\texttt{eval-4x4-easy-00000}, respuesta 0 de 8.
 
-\textbf{Respuesta del modelo y resultado del verificador:} \dato
+\textbf{Problema y respuesta esperada:} 6 casillas vacías.
+\[
+  \text{Puzzle: }
+  \begin{bmatrix} 0&2&3&4\\ 0&4&2&1\\ 0&0&1&0\\ 2&1&4&0 \end{bmatrix}
+  \qquad
+  \text{Solución: }
+  \begin{bmatrix} 1&2&3&4\\ 3&4&2&1\\ 4&3&1&2\\ 2&1&4&3 \end{bmatrix}
+\]
 
-\pendiente{explicar qué capacidad evidencia el ejemplo y contrastarlo
-con los resultados cuantitativos.}
+\textbf{Respuesta del modelo y resultado del verificador:} la grilla
+generada coincide con la solución, en el formato requerido y con 63
+tokens. El verificador aprueba todas las comprobaciones: recompensa 1.
 
-\subsection{Ejemplo de error y debilidad observada}
-\textbf{Modelo, nivel e instancia:} \dato
+En tableros pequeños, el 2B puede completar correctamente un puzzle en
+un solo paso, sin razonamiento explícito. Sin embargo, el acierto no es
+estable: en esta misma tarea, solo 1 de sus 8 respuestas fue correcta.
+Esta variabilidad entre intentos es la que miden \passuno\ y \passk, y es
+la condición que permite que el aprendizaje reforzado tenga señal.
 
-\textbf{Problema y respuesta esperada:} \dato
+\subsection{Ejemplos de error y debilidades observadas}
 
-\textbf{Respuesta del modelo y resultado del verificador:} \dato
+\paragraph{Valor fuera de rango en una grilla casi correcta.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 \emph{easy},
+\texttt{eval-4x4-easy-00000}, respuesta 2 de 8 (misma tarea del ejemplo
+anterior).
 
-\pendiente{identificar el origen del error: razonamiento, uso de
-herramientas, formato, interpretación o verificación. Sustentar
-la clasificación con la respuesta o traza correspondiente.}
+\textbf{Respuesta del modelo y resultado del verificador:}
+\[
+  \begin{bmatrix} 1&2&3&4\\ 3&4&2&1\\ 4&\mathbf{5}&1&2\\ 2&1&4&3 \end{bmatrix}
+\]
+Cinco de las seis casillas vacías son correctas, pero en la fila 3,
+columna 2, el modelo escribió 5, un valor imposible en un tablero de
+4x4 (el correcto es 3). Las pistas se conservan, pero fallan las
+comprobaciones de valores permitidos, filas, columnas y bloques:
+recompensa 0.
 
-% Duplicar estas subsecciones si se necesitan más ejemplos.
+\textbf{Origen del error:} interpretación de las reglas. El modelo no
+respeta el rango de valores de un tablero de 4x4, posiblemente por la
+mayor frecuencia de Sudokus de 9x9 en sus datos de entrenamiento. El
+ejemplo muestra además el costo de la recompensa binaria: una respuesta
+con un solo error recibe lo mismo que una respuesta vacía.
+
+\paragraph{Tablero incompleto.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 9x9 \emph{easy},
+\texttt{eval-9x9-easy-00000}, respuesta 0 de 8.
+
+\textbf{Problema y respuesta del modelo:} el puzzle tiene 17 casillas
+vacías. El modelo entrega una grilla con el formato correcto y sin
+alterar las pistas, en 268 tokens, pero solo 6 de las 17 casillas son
+correctas: deja 6 sin llenar (con 0) y llena 5 con valores incorrectos,
+entre ellos dos pares intercambiados en las filas 2 y 3 (por ejemplo,
+4 y 5 en las columnas 3 y 6 de la fila 2). Recompensa 0.
+
+\textbf{Origen del error:} razonamiento. El modelo no completa la
+deducción, aunque en este nivel todas las casillas se pueden llenar una a
+una con un único candidato. Es el patrón dominante del 2B en 9x9, nivel
+en que ninguna de sus 240 respuestas fue correcta.
+
+\paragraph{Corrección posterior a la respuesta y truncamiento.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-9B 4 bits, 9x9 \emph{easy},
+\texttt{eval-9x9-easy-00001}, respuesta 2 de 8.
+
+\textbf{Problema y respuesta del modelo:} el puzzle tiene 13 casillas
+vacías. El modelo cierra primero un bloque de respuesta con solo 3
+casillas correctas, 9 sin llenar y una incorrecta. Luego escribe
+``\emph{Wait, I see an error in my manual trace above. Let me re-solve
+carefully from scratch}'' y comienza a resolver fila por fila, hasta
+agotar los 1.024 tokens. El verificador rechaza la respuesta por texto
+posterior al bloque final: recompensa 0.
+
+\textbf{Origen del error:} formato y razonamiento a la vez. El modelo
+responde antes de resolver y luego intenta corregirse fuera del contrato
+de salida, pese a la instrucción de revisar en silencio. Es el
+comportamiento de 242 de las 268 respuestas truncadas del 9B.
