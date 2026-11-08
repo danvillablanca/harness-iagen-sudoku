@@ -2,47 +2,90 @@
 \label{sec:protocolo}
 
 \subsection{Modelos considerados}
-\guia{Incluir el modelo objetivo, del orden de 1 a 2 mil millones de
-parámetros según el enunciado, y los modelos usados para comparación.
-El curso pide modelos de frontera, privilegiando modelos abiertos.
-Añadir o quitar filas según los modelos efectivamente evaluados.}
+El modelo objetivo es Qwen3.5-2B, dentro del rango de 1 a 2 mil millones
+de parámetros que fija el enunciado \citep{enunciado2026}. Como comparación
+se evaluó Qwen3.5-9B cuantizado a 4 bits, el mismo modelo que actúa como
+profesor en la generación de trazas SFT y pares DPO. Ambos pertenecen a la
+misma familia, por lo que comparten plantilla de chat y tokenizador.
+Los dos modelos difieren a la vez en tamaño y en precisión de los pesos;
+por ello, la comparación no aísla el efecto del número de parámetros.
+No se evaluó un tercer modelo, en particular un modelo de frontera.
 
 \begin{table}[htbp]
   \centering\small
   \caption{Modelos utilizados en la línea base.}
   \label{tab:modelos}
-  \begin{tabularx}{\linewidth}{@{}lYYY@{}}
+  \begin{tabularx}{\linewidth}{@{}p{2.6cm}Ycl@{}}
     \toprule
     Rol & Modelo y variante & Parámetros & Versión o revisión \\
     \midrule
-    Objetivo & \dato & \dato & \dato \\
-    Comparación 1 & \dato & \dato & \dato \\
-    Comparación 2 & \dato & \dato & \dato \\
+    Objetivo & \texttt{Qwen/Qwen3.5-2B}, pesos originales sin cuantizar
+      & $\approx$\,2\,B & \texttt{15852e8c} \\
+    Comparación y profesor & \texttt{mlx-community/Qwen3.5-9B-4bit},
+      cuantización de 4 bits & $\approx$\,9\,B & \texttt{8b2b98c0} \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
 \subsection{Configuración y reproducibilidad}
 \begin{description}[leftmargin=0pt]
-  \item[Prompt y herramientas:] \pendiente{plantilla de prompt,
-  formato de salida, herramientas permitidas y límite de turnos.}
-  \item[Inferencia:] \pendiente{temperatura, top-p, máximo de tokens,
-  semillas y cualquier configuración que varíe entre modelos.}
-  \item[Entorno de ejecución:] \pendiente{hardware, precisión o
-  cuantización, software y versiones relevantes.}
-  \item[Verificación:] \pendiente{versión del verificador, criterio
-  binario de éxito y tratamiento de errores, salidas inválidas y
-  tiempos de espera.}
+  \item[Prompt y herramientas:] cada tarea se presenta en un único turno,
+  sin herramientas ni ejemplos resueltos (\emph{zero-shot}). El prompt
+  indica las dimensiones del tablero y de sus bloques, las reglas, el
+  puzzle como matriz JSON (0 representa una casilla vacía) y el contrato
+  de salida: un único bloque final
+  \texttt{<answer>...</answer>} con la matriz completa y sin texto
+  posterior. Se usó la variante de respuesta final, que pide revisar en
+  silencio y devolver solo el bloque de respuesta. Además, el turno del
+  asistente comienza con el prefijo \texttt{<answer>\textbackslash n[},
+  que solo fija el formato: los valores de las casillas y el cierre los
+  genera el modelo. El prefijo se contabiliza como entrada y forma parte
+  del texto que evalúa el verificador.
+  \item[Inferencia:] muestreo con temperatura 0{,}7, \emph{top-p} 0{,}8,
+  \emph{top-k} 20 y penalización de presencia 1{,}5, sin modo de
+  razonamiento (\emph{thinking}). Límites: 2.048 tokens de entrada y
+  1.024 de salida. La semilla base es 42 y cada intento usa una semilla
+  derivada de la tarea y del número de intento, de modo que reanudar una
+  corrida no las altera. Todos los parámetros son idénticos para ambos
+  modelos.
+  \item[Entorno de ejecución:] computador Mac con Apple Silicon
+  (\dato: modelo de chip y memoria), macOS~27.0.1, Python~3.13.12,
+  MLX~0.32.0 y mlx-lm~0.31.3; el entorno incluía además PyTorch~2.13.0
+  y Transformers~5.18.0. Precisión del modelo objetivo: \dato.
+  \item[Verificación:] la función
+  \texttt{reward(prompt, completion) -> float} del harness, binaria:
+  entrega 1 si la respuesta cumple el contrato de formato y el tablero es
+  una solución válida que conserva las pistas, y 0 en cualquier otro caso.
+  No usa la solución de referencia, por lo que acepta cualquier solución
+  válida. Una respuesta que alcanza el límite de tokens sin cerrar el
+  bloque de respuesta recibe 0; no se aplican tiempos de espera adicionales.
+  La robustez del verificador se analiza en la sección~\ref{sec:robustez}.
 \end{description}
 
-\subsection{Métricas y muestreo}
-\pendiente{definir cómo se calculan \passuno\ y \passk, el valor o
-valores de $k$, el número de problemas por nivel y el número de
-respuestas muestreadas por problema.}
+Cada archivo de resultados registra la configuración, las revisiones de
+los modelos, las versiones del software y los hashes del código y de los
+datos. La corrida completa (\texttt{results/challenge-full-20261103})
+conserva una copia del código y de las particiones usadas.
 
-\guia{Explicitar el estimador utilizado y citar su fuente si
-corresponde. Distinguir el número total de muestras $n$ del valor
-$k$; debe haber suficientes muestras para estimar la métrica elegida.
-Reportar siempre la misma escala, proporción o porcentaje, e indicar
-cómo se agregan los resultados. El enunciado no fija un valor de $k$.
-Una recompensa parcial no equivale automáticamente a un acierto.}
+\subsection{Métricas y muestreo}
+Se evaluó la partición de validación (\emph{eval}): 90 tareas, 10 por
+cada combinación de tamaño de tablero (4x4, 6x6 y 9x9) y nivel
+(\emph{easy}, \emph{medium} y \emph{hard}). Cada modelo generó $n = 8$
+respuestas independientes por tarea, es decir, 720 respuestas por modelo.
+La partición de prueba (\emph{test}) no se utilizó y queda reservada.
+
+Para una tarea con $c$ respuestas correctas de $n$, se usa el estimador
+insesgado de \citet{chen2021codex}:
+\[
+  \text{pass@}k = 1 - \binom{n-c}{k} \Big/ \binom{n}{k},
+  \qquad k \in \{1, 2, 4, 8\}.
+\]
+El valor se promedia sobre las tareas de cada grupo y, para el valor
+global, sobre las 90 tareas (promedio macro; como todos los grupos tienen
+10 tareas, coincide con el promedio de los nueve grupos). \passuno\ es la
+tasa de éxito esperada con muestreo, no la de decodificación
+determinista, y \texttt{pass@8} equivale a la fracción de tareas con al
+menos un acierto. Las ocho respuestas de una tarea no se tratan como
+tareas independientes. Se reporta además la proporción de respuestas que
+alcanzaron el límite de tokens. Todas las métricas se expresan en
+porcentaje.

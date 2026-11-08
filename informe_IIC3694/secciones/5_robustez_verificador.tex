@@ -1,39 +1,129 @@
 \section{Robustez del verificador}
 \label{sec:robustez}
 
-\pendiente{describir qué valida el verificador, cómo interpreta la
-respuesta y cómo implementa la interfaz
-\texttt{reward(prompt, completion) -> float}.}
+El verificador implementa la interfaz común del curso
+\texttt{reward(prompt, completion) -> float}. Lee el puzzle y las
+dimensiones del tablero desde el propio prompt, de modo que cualquier
+grupo puede usarlo sin acceso a los archivos del dataset ni a la solución
+de referencia. Un prompt que no contiene un puzzle válido se trata como un
+error de configuración del harness, no como una respuesta incorrecta.
+La evaluación de una respuesta tiene dos etapas:
+
+\begin{description}[leftmargin=0pt]
+  \item[Contrato de formato:] la respuesta debe terminar con exactamente un
+  bloque \texttt{<answer>...</answer>} que contenga una matriz JSON de
+  $N \times N$ enteros, sin texto posterior. Se permiten explicaciones y
+  grillas intermedias antes del bloque, y una sección de razonamiento
+  delimitada por \texttt{<think>}; no se aceptan bloques de respuesta
+  dentro de ella.
+  \item[Reglas del Sudoku:] todas las casillas llenas, valores entre 1 y
+  $N$, sin repeticiones en filas, columnas ni bloques, y pistas originales
+  sin modificar.
+\end{description}
+
+La recompensa es binaria: 1 si se cumplen ambas etapas y 0 en cualquier
+otro caso. Como no se compara con la solución de referencia, cualquier
+solución válida recibe la recompensa máxima. Las métricas de la
+sección~\ref{sec:resultados} se calcularon con una versión congelada del
+verificador, identificada por el hash de su código en el registro de la
+corrida.
 
 \subsection{Equivalencias y pruebas adversariales}
-\guia{Comprobar que se acepten respuestas correctas equivalentes y
-se rechacen respuestas incorrectas. El enunciado valora casos
-diseñados para engañar al verificador, incluyendo respuestas
-contradictorias, explotación del formato y errores del parser.
-La tabla propone categorías de prueba, no resultados ya obtenidos.}
+Las pruebas automatizadas del harness incluyen 30 casos diseñados para
+comprobar que el verificador acepta respuestas correctas equivalentes y
+rechaza intentos de obtener recompensa sin resolver el Sudoku. Ninguna
+requiere cargar un modelo. La tabla~\ref{tab:robustez} los agrupa por
+categoría; la columna de evidencia remite a las pruebas descritas a
+continuación.
 
 \begin{table}[htbp]
   \centering\small
   \caption{Pruebas de robustez del verificador.}
   \label{tab:robustez}
-  \begin{tabularx}{\linewidth}{@{}YYYY@{}}
+  \begin{tabularx}{\linewidth}{@{}YYcc@{}}
     \toprule
     Caso probado & Comportamiento esperado & Resultado observado & Evidencia \\
     \midrule
-    Respuesta correcta equivalente & Aceptar & \dato & \dato \\
-    Respuesta incorrecta & Rechazar & \dato & \dato \\
-    Respuestas contradictorias & Rechazar & \dato & \dato \\
-    Formato inválido o ambiguo & Definir política & \dato & \dato \\
-    Intento de engaño al parser & Rechazar el engaño & \dato & \dato \\
+    Solución correcta precedida de explicaciones, grillas intermedias o
+      razonamiento entre \texttt{<think>} (4 casos)
+      & Aceptar & Aceptada (4/4) & P1 \\
+    Soluciones válidas distintas de la de referencia (4 casos)
+      & Aceptar & Aceptada (4/4) & P6 \\
+    Copia del puzzle sin resolver; números renombrados que respetan filas,
+      columnas y bloques, pero alteran las pistas (2 casos)
+      & Rechazar & Rechazada (2/2) & P4 \\
+    Dos bloques de respuesta; respuesta oculta en el razonamiento;
+      razonamiento sin cerrar (3 casos)
+      & Rechazar & Rechazada (3/3) & P2 \\
+    Texto posterior a la respuesta, etiquetas en mayúsculas o anidadas
+      (3 casos)
+      & Rechazar & Rechazada (3/3) & P2 \\
+    Valores no enteros o fuera de rango (\texttt{true}, \texttt{8.0},
+      \texttt{"8"}, \texttt{null}, $-1$, 0, 10), grillas de forma incorrecta
+      o con un solo número repetido y respuesta no textual (11 casos)
+      & Rechazar & Rechazada (11/11) & P3 \\
+    Solución correcta sin etiquetas o dentro de un bloque Markdown (2 casos)
+      & Política: rechazar por formato & Rechazada (2/2) & P5 \\
+    Prompt sin puzzle válido (1 caso)
+      & Error de configuración & Error (1/1) & P7 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-\subsection{Vulnerabilidades y limitaciones}
-\pendiente{reportar el número de casos evaluados, falsos positivos
-(respuestas incorrectas aceptadas), falsos negativos (respuestas
-correctas rechazadas), problemas encontrados y correcciones.}
+Las pruebas están en \texttt{Laboratorio/Qwen3.5/test\_reward.py}:
+\begin{description}[leftmargin=0pt]
+  \item[P1] \texttt{test\_explanation\_and\_thinking\_variants}
+  \item[P2] \texttt{test\_rejects\_ambiguous\_or\_hidden\_answers}
+  \item[P3] \texttt{test\_rejects\_invalid\_json\_types\_and\_grid\_shapes}
+  \item[P4] \texttt{test\_copying\_puzzle\_or\_changing\_clues\_cannot\_pass}
+  \item[P5] \texttt{test\_mathematical\_correctness\_is\_separate\_from\_required\_format}
+  \item[P6] \texttt{test\_alternative\_solutions\_do\_not\_need\_reference\_match}
+  \item[P7] \texttt{test\_malformed\_prompt\_is\_configuration\_error}
+\end{description}
 
-\guia{Distinguir los fallos del modelo de los del verificador.
-Si se modifica este último, indicar si se recalcularon las métricas
-afectadas. Declarar qué ataques o equivalencias aún no se han probado.}
+El caso de los números renombrados es el intento de engaño más
+sofisticado: reemplazar cada número por el siguiente produce un tablero
+que respeta todas las reglas de filas, columnas y bloques, y solo la
+verificación de las pistas originales lo rechaza. Además de estas
+pruebas, la auditoría de la corrida completa comprobó que las 630
+soluciones de referencia del dataset son válidas y volvió a calcular la
+recompensa de los 3.600 candidatos del profesor, de los ejemplos SFT y de
+ambos miembros de cada par DPO. Esta auditoría verifica la consistencia
+de los valores registrados, no la ausencia de errores del verificador.
+
+\subsection{Vulnerabilidades y limitaciones}
+Las 7 pruebas de la tabla~\ref{tab:robustez}, con sus 30 casos, se
+ejecutaron sin fallos: entre los casos probados, el verificador no aceptó
+ninguna respuesta incorrecta (falsos positivos) ni rechazó ninguna
+solución válida que cumpliera el formato (falsos negativos). Además, al
+clasificar los errores de la sección~\ref{sec:cualitativo} se volvió a
+calcular la recompensa de las 1.440 respuestas de la línea base, y todas
+coincidieron con los valores registrados.
+
+Los falsos negativos existen por decisión de diseño. Una solución
+matemáticamente correcta recibe 0 si no respeta el contrato de formato:
+por ejemplo, sin etiquetas, dentro de un bloque Markdown o con texto
+posterior. El parser recupera estas grillas para diagnóstico y el
+reporte distingue la corrección matemática (\texttt{solved}) de la
+aceptación completa (\texttt{passed}), pero la recompensa exige ambas.
+Esta política evita ambigüedades sobre cuál es la respuesta final, a
+costa de penalizar errores de formato; en la línea base se mitigó con el
+prefijo \texttt{<answer>\textbackslash n[} descrito en la
+sección~\ref{sec:protocolo}. Las métricas distinguen además las respuestas
+truncadas, que reciben 0 por no cerrar el bloque de respuesta.
+
+Otras limitaciones del verificador actual:
+\begin{itemize}
+  \item La recompensa no otorga crédito parcial: una grilla con un solo
+  error vale lo mismo que una respuesta vacía.
+  \item Evalúa solo el tablero final, no la validez del razonamiento ni de
+  los pasos intermedios.
+  \item Solo acepta la grilla como matriz JSON. Otras representaciones
+  equivalentes, como filas escritas en texto plano, se rechazan por diseño.
+  \item No se han probado respuestas extremadamente largas, dígitos en
+  otros sistemas de escritura Unicode ni variaciones de espacios o saltos
+  de línea dentro de las etiquetas.
+\end{itemize}
+
+El verificador no se modificó durante la corrida, por lo que no fue
+necesario recalcular métricas.
