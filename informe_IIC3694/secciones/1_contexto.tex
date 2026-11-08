@@ -5,22 +5,86 @@ Este informe presenta la evaluación de línea base de
 \NombreProyecto, correspondiente al cuarto entregable del
 Desafío de Investigación de \CodigoCurso\ \citep{enunciado2026}.
 
-\pendiente{explicar el problema de razonamiento o uso de herramientas,
-el modelo objetivo y qué se busca establecer con esta evaluación.}
+El problema elegido es resolver Sudokus de tamaño $N \times N$: completar
+una grilla de modo que cada fila, columna y bloque contenga los números
+de 1 a $N$ exactamente una vez, sin modificar las pistas originales. Es
+un problema de razonamiento con restricciones, de varios pasos, cuya
+respuesta se puede verificar con código sin ambigüedad. No requiere
+conocimiento externo ni herramientas, y su dificultad se puede controlar
+con el tamaño del tablero y la cantidad de casillas vacías. El modelo
+objetivo es Qwen3.5-2B, que resuelve con dificultad esta tarea.
 
-\guia{Resumir el entorno y el dataset solo en lo necesario para
-interpretar la línea base. Remitir a sus entregables específicos
-para la descripción completa, el código del harness y los datos
-derivados. El entrenamiento posterior no es un resultado exigido
-para este informe.}
+La evaluación busca establecer, antes de cualquier entrenamiento, cuánto
+resuelve el modelo objetivo en cada tamaño y nivel de dificultad, cómo se
+compara con un modelo mayor de la misma familia y si las tareas caen en
+una zona aprendible: niveles en que el modelo acierta en algunos intentos
+y falla en otros, condición necesaria para que el aprendizaje reforzado
+con recompensas verificables tenga señal. No se entrenaron pesos en esta
+etapa.
+
+El harness define el formato del prompt, el parser de la respuesta y el
+verificador, expuesto mediante la interfaz común
+\texttt{reward(prompt, completion) -> float}. Con el mismo verificador se
+generaron también los datos derivados del profesor Qwen3.5-9B: 161
+ejemplos SFT y 600 pares de preferencia DPO a partir de la partición de
+entrenamiento. El código, el dataset y los datos derivados se describen
+en sus entregables respectivos; aquí se resume solo lo necesario para
+interpretar la línea base.
 
 \subsection{Tareas, particiones y dificultad}
-\pendiente{identificar la partición evaluada, su tamaño, la forma de
-obtener respuestas verificables y el criterio de cada nivel de
-dificultad. Indicar cómo se evita usar el conjunto de prueba para
-ajustar las tareas.}
+Las tareas se generan con código, adaptando el generador de Sudoku de
+Reasoning Gym \citep{stojanovski2025reasoninggym}: primero se construye
+una solución completa aleatoria y luego se borran casillas una a una,
+deshaciendo cada borrado que permitiría una segunda solución. Así, cada
+puzzle tiene solución única y su respuesta es verificable por
+construcción. Aun así, el verificador no compara con la solución de
+referencia: acepta cualquier tablero que cumpla las reglas y conserve
+las pistas.
 
-\guia{El enunciado solicita particiones train/eval/test y niveles de
-dificultad. Registrar las versiones utilizadas y enlazar el material
-correspondiente. Los nombres de niveles usados en las tablas son
-orientativos y deben ajustarse al dataset real.}
+El dataset contiene tableros de 4x4 (bloques de 2x2), 6x6 (bloques de
+2x3) y 9x9 (bloques de 3x3), con tres niveles definidos por la cantidad
+de casillas vacías (tabla~\ref{tab:niveles}). Cada combinación de tamaño
+y nivel tiene 50 tareas de entrenamiento, 10 de validación y 10 de
+prueba: en total, 450, 90 y 90 tareas. La línea base de este informe usa
+las 90 tareas de validación.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Casillas vacías por tamaño de tablero y nivel. Los rangos se
+  fijaron antes de la evaluación y no están calibrados con el modelo
+  objetivo.}
+  \label{tab:niveles}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Tablero & \emph{easy} & \emph{medium} & \emph{hard} \\
+    \midrule
+    4x4 (16 casillas) & 4--6   & 7--9   & 10--12 \\
+    6x6 (36 casillas) & 8--12  & 13--18 & 19--24 \\
+    9x9 (81 casillas) & 10--20 & 21--35 & 36--50 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Los niveles miden la cantidad de casillas por completar, no la técnica
+necesaria para resolverlas: 89 de las 90 tareas de validación se pueden
+resolver completando repetidamente una casilla con un único candidato.
+Los nombres \emph{easy}, \emph{medium} y \emph{hard} son, por lo tanto,
+relativos a cada tamaño y no comparables entre tamaños.
+
+Cada tarea se genera con su propia semilla, de modo que el dataset es
+reproducible. Las particiones se generan en el orden prueba, validación
+y entrenamiento, y ningún puzzle se repite entre ellas; aumentar el
+número de tareas de entrenamiento no altera las otras dos. Una revisión
+posterior de simetrías, limitada a los tableros de 4x4, comparó las
+particiones de entrenamiento y validación bajo renombramiento de
+números, intercambio de filas o columnas dentro de una banda, intercambio
+de bandas y transposición. Aunque no hay puzzles idénticos, 3 de las 10
+tareas de validación de 4x4 \emph{hard} resultaron equivalentes a tareas
+de entrenamiento. Esto no afecta la línea base, que no involucra
+entrenamiento, pero limitará las conclusiones sobre generalización en
+el proyecto posterior; los tableros de 6x6 y 9x9 no se revisaron.
+
+La partición de prueba no se usó en ninguna etapa: ni para ajustar las
+tareas o el protocolo, ni para generar datos derivados. Las decisiones de
+calibración se toman exclusivamente con la partición de validación, y la
+de prueba queda reservada para la evaluación final.
