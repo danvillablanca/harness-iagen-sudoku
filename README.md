@@ -1,6 +1,8 @@
 # harness-iagen-sudoku
 Harness de Sudoku para el curso IIC3694-1 Inteligencia Artificial Generativa.
 
+Hay una versión del harness para Google Colab en `Colab_Sudoku.ipynb`.
+
 # Compilar el LATEX:
 cd informe_IIC3694
 latexmk -pdf -interaction=nonstopmode -halt-on-error informe.tex
@@ -149,7 +151,7 @@ cambia `eval` ni `test`. `reward(record["prompt"], respuesta)` funciona
 directamente, y `case_from_record(record)` entrega un `PromptCase` para
 `evaluate` y `print_result`.
 
-Tests (sin dependencias adicionales):
+Tests (sin dependencias adicionales; hoy cubren `dataset.py` y `baseline.py`):
 
 ```sh
 python -m unittest discover -s Laboratorio/Qwen3.5 -p "test_*.py"
@@ -174,6 +176,7 @@ python Laboratorio/Qwen3.5/baseline.py summary results/*.jsonl --out results/sum
 | --- | --- | --- |
 | `--tasks FILE` | JSONL de `dataset.py` | requerido |
 | `--model-id ID` | Modelo de Hugging Face | `Qwen/Qwen3.5-2B` |
+| `--backend B` | `auto`, `mlx`, `cuda`, `mps` o `cpu` | `auto` |
 | `--thinking` / `--no-thinking` | Modo de razonamiento | desactivado |
 | `--n N` | Muestras por tarea | 8 |
 | `--batch-size N` | Muestras generadas a la vez (bajar si falta memoria) | 8 |
@@ -184,7 +187,8 @@ python Laboratorio/Qwen3.5/baseline.py summary results/*.jsonl --out results/sum
 | `--seed N` | Semilla del muestreo | 0 |
 | `--out DIR` | Carpeta de resultados | `results` |
 
-`summary` imprime una tabla Markdown por modelo, modo, tamaño y nivel con
+`summary` acepta `--k N...` (valores de k para pass@k; por defecto `1 2 4 8`) y
+`--out FILE` (salida JSON opcional). Imprime una tabla Markdown por modelo, modo, tamaño y nivel con
 pass@k (estimador insesgado de Chen et al., 2021: `1 - C(n-c, k) / C(n, k)`,
 promediado sobre tareas), el porcentaje de respuestas cortadas por el límite de
 tokens y los tokens promedio. pass@k solo se calcula para tareas con al menos
