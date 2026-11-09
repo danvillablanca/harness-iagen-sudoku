@@ -3,6 +3,7 @@
 import json
 import random
 import re
+from functools import lru_cache
 from pathlib import Path
 from string import Formatter
 
@@ -261,30 +262,61 @@ def is_deducible(puzzle: list[list[int]], case: dict) -> bool:
             return False
 
 
-def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
-    """Number of valid completions of `puzzle`, counting at most `limit`.
-
-    With the default limit, 1 means the solution is unique and 2 means
-    there are at least two."""
+def find_solutions(
+    puzzle: list[list[int]], case: dict, limit: int = 2
+) -> list[list[list[int]]]:
+    """Valid completions of `puzzle`, stopping after `limit` of them."""
     grid = [row[:] for row in puzzle]
-    found = 0
+    found = []
 
     def search():
-        nonlocal found
         best = _most_constrained_cell(grid, case)
         if best is None:
-            found += 1
+            found.append([row[:] for row in grid])
             return
         r, c, options = best
         for value in options:
             grid[r][c] = value
             search()
             grid[r][c] = 0
-            if found >= limit:
+            if len(found) >= limit:
                 return
 
     search()
-    return min(found, limit)
+    return found
+
+
+def count_solutions(puzzle: list[list[int]], case: dict, limit: int = 2) -> int:
+    """Number of valid completions of `puzzle`, counting at most `limit`.
+
+    With the default limit, 1 means the solution is unique and 2 means
+    there are at least two."""
+    return len(find_solutions(puzzle, case, limit))
+
+
+def unique_solution(
+    puzzle: list[list[int]], case: dict
+) -> tuple[tuple[int, ...], ...] | None:
+    """The only completion of `puzzle`, or None if it has none or several.
+
+    Uses only the public rules, never `expected_solution`. The search is
+    exhaustive, so a returned grid is a proof of uniqueness. Results are cached
+    per puzzle: every sample of a task shares the same puzzle."""
+    return _unique_solution(
+        case["size"],
+        case["box_rows"],
+        case["box_columns"],
+        tuple(tuple(row) for row in puzzle),
+    )
+
+
+@lru_cache(maxsize=4096)
+def _unique_solution(size, box_rows, box_columns, puzzle):
+    case = {"size": size, "box_rows": box_rows, "box_columns": box_columns}
+    found = find_solutions([list(row) for row in puzzle], case)
+    if len(found) != 1:
+        return None
+    return tuple(tuple(row) for row in found[0])
 
 
 MAX_BLANKING_ATTEMPTS = 1000
@@ -297,8 +329,9 @@ def with_empty_cells(
 ) -> dict:
     """Return a copy of `case` whose puzzle is the reference solution with
     `empty_cells` random cells blanked, resampled until the puzzle can be
-    solved by only filling cells with a single candidate. The solution need
-    not be unique: any grid passing the rule checks is accepted."""
+    solved by only filling cells with a single candidate. Such a puzzle always
+    has a unique solution, because every step is forced. Any grid passing the
+    rule checks is accepted regardless."""
     size = case["size"]
 
     if not 0 <= empty_cells <= size * size:

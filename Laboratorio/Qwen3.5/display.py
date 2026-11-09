@@ -37,5 +37,16 @@ def print_result(case, report, result, max_output_tokens, load_seconds, generati
     print(f"Sudoku correctness: {correctness}")
     for issue in report["parsed"].issues:
         print(f"Parser issue: {issue}")
-    print(f"Reward: {report['reward']:.1f}")
+    score = report["score"]
+    parts = {
+        "format": int(score["format"]),
+        "clues_frac": score["clues_frac"],
+        "fill": score["fill"],
+        "solved": int(score["solved"]),
+    }
+    shown = ", ".join(
+        f"{name}={'n/a' if value is None else f'{value:.3f}' if isinstance(value, float) else value}"
+        for name, value in parts.items()
+    )
+    print(f"Reward: {report['reward']:.3f} ({shown})")
     print(f"\nResult: {'PASSED' if report['passed'] else 'FAIL'}")
