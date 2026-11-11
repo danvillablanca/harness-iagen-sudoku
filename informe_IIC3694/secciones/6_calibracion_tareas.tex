@@ -1,21 +1,98 @@
 \section{Calibración de las tareas para el modelo objetivo}
 \label{sec:calibracion}
 
-\guia{Usar la línea base para evaluar si las tareas ofrecen una zona
-aprendible para el modelo objetivo. El enunciado pide evitar tanto
-el fracaso sistemático como tareas que el modelo siempre resuelve;
-no establece umbrales numéricos obligatorios.}
-
 \subsection{Evidencia por nivel de dificultad}
-\pendiente{interpretar conjuntamente \passuno\ y \passk\ del modelo
-objetivo en cada nivel. Identificar familias de tareas con aciertos,
-margen de mejora o ausencia de aciertos en la muestra evaluada.}
+Para que el aprendizaje reforzado tenga señal, el modelo objetivo debe
+acertar en algunos intentos de una tarea y fallar en otros. Cuando el
+entrenamiento compara varias respuestas a una misma tarea, aprende de las
+diferencias de recompensa entre ellas. Si los ocho intentos fallan, o si
+los ocho aciertan, todas las respuestas reciben la misma recompensa
+binaria y la tarea no aporta señal. Por ello, además de los promedios de
+la sección~\ref{sec:resultados}, la tabla~\ref{tab:calibracion}
+clasifica cada tarea de validación según el número de respuestas
+correctas del modelo objetivo.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Tareas de validación según el número de respuestas correctas
+  de Qwen3.5-2B ($n = 8$ por tarea, 10 tareas por grupo).}
+  \label{tab:calibracion}
+  \begin{tabular}{@{}llccc@{}}
+    \toprule
+    Tablero & Nivel & Sin aciertos (0/8) & Mixtas (1/8 a 7/8)
+      & Siempre correctas (8/8) \\
+    \midrule
+    4x4 & easy   &  5 & 4 & 1 \\
+        & medium &  6 & 3 & 1 \\
+        & hard   &  9 & 1 & 0 \\
+    6x6 & easy   &  7 & 3 & 0 \\
+        & medium &  9 & 1 & 0 \\
+        & hard   & 10 & 0 & 0 \\
+    9x9 & easy   & 10 & 0 & 0 \\
+        & medium & 10 & 0 & 0 \\
+        & hard   & 10 & 0 & 0 \\
+    \midrule
+    \multicolumn{2}{@{}l}{Total} & 76 & 12 & 2 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Solo 12 de las 90 tareas (13\,\%) tienen resultados mixtos, y todas
+pertenecen a 4x4 o a 6x6 \emph{easy} y \emph{medium}. Únicamente 2 tareas
+se resuelven en los ocho intentos, por lo que el entorno no presenta
+problemas de saturación. La limitación es el exceso de dificultad. Según
+esta evidencia, las tareas se agrupan en tres zonas.
+\begin{description}[leftmargin=0pt]
+  \item[Zona aprendible:] 4x4 en sus tres niveles y 6x6 \emph{easy} y
+  \emph{medium}, con al menos una tarea mixta por grupo.
+  \item[Sin aciertos observados:] 6x6 \emph{hard} y los tres niveles de
+  9x9, donde el modelo objetivo no resolvió ninguna tarea en ocho
+  intentos.
+  \item[Saturada:] ningún grupo; solo dos tareas aisladas de 4x4.
+\end{description}
+
+La relación entre \passuno\ y \texttt{pass@8} es coherente con esta
+clasificación. En 6x6 \emph{easy}, \passuno\ es 5,0\,\% y
+\texttt{pass@8} es 30,0\,\%. Los aciertos son escasos, pero están
+repartidos en tres tareas distintas, todas mixtas. En 4x4 \emph{medium},
+en cambio, los valores son 30,0\,\% y 40,0\,\%. En ese grupo, el modelo
+acierta casi siempre en tres tareas, dos con 7 de 8 aciertos y una con
+8 de 8, rara vez en una cuarta, con 2 de 8, y nunca en las seis
+restantes. Por eso, más intentos aportan poco.
+
+Esta evidencia tiene un alcance limitado. Cada grupo contiene solo 10
+tareas, se usó una única semilla base y no se calcularon intervalos de
+confianza. Además, el modelo objetivo se evaluó en la partición de
+validación y no en la de entrenamiento, sobre la cual se aplicaría el
+aprendizaje reforzado. Ambas provienen del mismo generador, pero que el
+modelo se comporte igual en ellas es un supuesto. Por último, que un
+grupo no tenga aciertos en la muestra no implica que el modelo nunca
+pueda resolver esas tareas, como se discute en la
+subsección~\ref{sec:ajustes}.
 
 \subsection{Ajustes propuestos y alcance de la evidencia}
-\pendiente{justificar qué tareas conservar, simplificar, endurecer o
-diversificar, y cómo se verificaría el efecto de esos cambios.}
+\label{sec:ajustes}
+El principal ajuste propuesto es ampliar la partición de validación antes
+de usarla para tomar decisiones de calibración. Con 10 tareas por grupo,
+cada tarea representa 10 puntos porcentuales de \texttt{pass@8}, por lo
+que diferencias como la inversión entre \emph{easy} y \emph{medium} del
+2B en 4x4 no se pueden distinguir de la variabilidad de la muestra. La
+limitación es más seria en los grupos sin aciertos. Si el 5\,\% de las
+tareas de un grupo se pudiera resolver en al menos uno de 8 intentos, una
+muestra de 10 tareas no mostraría ninguna con una probabilidad cercana
+al 60\,\%. Con 50 tareas por grupo, esa probabilidad baja a cerca del
+8\,\% y cada tarea pasa a representar 2 puntos porcentuales. Ampliar la
+validación requiere solo inferencia. Con 50 tareas por grupo y $n = 8$,
+son 3.600 respuestas por modelo, el mismo volumen que ya se generó con el
+profesor sobre la partición de entrenamiento. La partición de prueba se
+genera antes que la de validación y no cambiaría. Debe comprobarse, en
+cambio, que la ampliación conserve las tareas de validación actuales y no
+altere las de entrenamiento, sobre las que se generaron los datos
+derivados.
 
-\guia{Precisar si los ajustes se propusieron o se evaluaron realmente.
-Utilizar validación para calibrar y reservar prueba para la evaluación
-final. Los resultados de inferencia orientan la calibración; por sí
-solos no demuestran una mejora futura mediante entrenamiento.}
+Este ajuste se propone, pero no se ha evaluado. Las decisiones de
+calibración se tomarán exclusivamente con la partición de validación, y
+la de prueba se mantiene reservada para la evaluación final. Además, los
+resultados de inferencia orientan la calibración, pero por sí solos no
+demuestran que el entrenamiento vaya a mejorar al modelo objetivo en
+estos niveles.
