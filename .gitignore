@@ -229,6 +229,15 @@ informe_IIC3694/informe.fdb_latexmk
 informe_IIC3694/informe.blg
 informe_IIC3694/informe.bbl
 informe_IIC3694/informe.aux
+propuesta_IIC3694/propuesta.aux
+propuesta_IIC3694/propuesta.bbl
+propuesta_IIC3694/propuesta.blg
+propuesta_IIC3694/propuesta.fdb_latexmk
+propuesta_IIC3694/propuesta.fls
+propuesta_IIC3694/propuesta.log
+propuesta_IIC3694/propuesta.out
+propuesta_IIC3694/propuesta.toc
+propuesta_IIC3694/*.tmp
 
 logs
 scripts

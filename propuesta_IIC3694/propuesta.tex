@@ -1,0 +1,165 @@
+\documentclass[letterpaper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{%
+  \usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+}{%
+  \usepackage{babel}
+  \babelprovide[import,main]{spanish}
+}
+\usepackage{lmodern,microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,tabularx,array,enumitem,xcolor,graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parskip}{0.45em}\setlength{\parindent}{0pt}
+\setlist{nosep,topsep=0.3em}
+\renewcommand{\arraystretch}{1.15}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\passuno}{\texttt{pass@1}}
+\newcommand{\passk}{\texttt{pass@}\ensuremath{k}}
+% Decisiones aún abiertas del grupo (ver TODO de reunión).
+\newcommand{\pd}[1]{\textcolor{orange!70!black}{\textit{[Por decidir: #1]}}}
+
+\title{\textbf{Entrenar un LLM pequeño para resolver Sudoku: comparación de SFT, DPO y RLVR sobre un entorno verificable}\\[0.3em]
+\large Propuesta inicial -- Entrega 1}
+\author{Lilly Guevara \and Cristian Hinostroza \and Juan Moya \and Dan Villablanca}
+\date{IIC-3694 Inteligencia Artificial Generativa -- 11 de noviembre de 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Proponemos comparar, sobre un mismo entorno de Sudoku con verificador, cuatro estrategias de post-entrenamiento de Qwen3.5-2B (solo SFT, SFT seguido de RLVR con GRPO, solo RLVR y DPO) junto con el modelo base sin entrenamiento como línea de control, con un presupuesto de cómputo comparable. Como contribución propia, proponemos un currículo de dificultad basado en el número de celdas vacías para el entrenamiento con RLVR, y lo comparamos contra entrenar con dificultades mezcladas. El entorno, los datos y la línea base preliminar provienen del Desafío. Buscamos responder si el SFT previo acelera o limita el aprendizaje con RLVR, cuánto generaliza cada estrategia a la partición de prueba y a niveles de dificultad no vistos, si un currículo por celdas vacías mejora la eficiencia y el resultado final, si lo aprendido se transfiere a tareas de otros entornos del curso, y si aparece \emph{reward hacking}. Documentaremos el ciclo de iteración (entrenar, inspeccionar trazas, corregir el verificador y reentrenar) e incluiremos una auditoría manual de trazas exitosas.
+\end{abstract}
+
+\section{Introducción y motivación}
+El aprendizaje reforzado con recompensas verificables (RLVR) ha pasado a ser una pieza central del post-entrenamiento de modelos de razonamiento \citep{lambert2024tulu3,deepseekr1}. Su ingrediente clave es un verificador automático que sirve como recompensa. Esto lo hace atractivo, pero también frágil: un verificador imperfecto puede ser explotado por la política \citep{skalse2022reward}. Además, hay evidencia mixta sobre si RLVR agrega capacidades o solo afina las que el modelo ya posee \citep{yue2025limit}, y sobre el rol del SFT previo, que puede acelerar el aprendizaje pero también reducir la exploración.
+
+Estas preguntas son difíciles de estudiar a escala de laboratorio de frontera, pero se pueden abordar con un modelo pequeño y un entorno barato de verificar. En el Desafío construimos un harness de Sudoku ($4\times4$, $6\times6$ y $9\times9$, tres niveles de dificultad) cuya respuesta se verifica por construcción. El Sudoku es un problema de razonamiento con restricciones, de varios pasos, que Qwen3.5-2B resuelve mal. Este proyecto usa ese entorno para comparar estrategias de entrenamiento de forma controlada. Entrenaremos solo con $4\times4$ y $6\times6$; los $9\times9$ quedan fuera del entrenamiento y se usarían únicamente para evaluar.
+
+\section{Revisión bibliográfica}
+\textbf{Entornos verificables.} Reasoning Gym \citep{stojanovski2025reasoninggym} ofrece generadores de tareas con verificadores y dificultad configurable; nuestro generador de Sudoku adapta el suyo. AgentGym \citep{xi2025agentgym} sigue la misma filosofía para agentes con herramientas.
+
+\textbf{Algoritmos.} PPO \citep{schulman2017ppo} es la base de muchos métodos de RLHF. GRPO \citep{shao2024deepseekmath} elimina el crítico y estima la ventaja comparando las recompensas de un grupo de respuestas a un mismo prompt; así se usó en DeepSeek-R1 \citep{deepseekr1}. Trabajos posteriores analizan sesgos de GRPO, como la normalización por longitud y por desviación estándar \citep{liu2025drgrpo}, y proponen mejoras prácticas, como filtrar grupos sin señal y recortar de forma asimétrica \citep{yu2025dapo}. DPO \citep{rafailov2023dpo} optimiza directamente sobre pares de preferencia, sin modelo de recompensa ni muestreo en línea, y es de bajo costo. Para SFT y DPO con pocos recursos usaremos LoRA \citep{hu2022lora} sobre las implementaciones de TRL \citep{vonwerra2020trl}.
+
+\textbf{Currículo.} El aprendizaje por currículo presenta ejemplos de menor a mayor dificultad \citep{bengio2009curriculum}. En RLVR para LLM, Kimi k1.5 usa muestreo por currículo y priorizado \citep{kimi2025k15}, y DAPO filtra grupos donde todas las respuestas reciben la misma recompensa \citep{yu2025dapo}. Nuestro entorno permite controlar la dificultad con una variable explícita y barata, el número de celdas vacías, lo que facilita estudiar el currículo de forma controlada.
+
+\textbf{Qué aporta RLVR.} \citet{yue2025limit} reportan que, medido con \passk\ para $k$ grande \citep{chen2021codex}, los modelos entrenados con RLVR no superan al modelo base. Esto motiva reportar \passk\ además de \passuno, y estudiar en qué zona de dificultad hay señal.
+
+\textbf{Reward hacking y auditoría.} \citet{skalse2022reward} formalizan el \emph{reward gaming}. En código, SWE-Bench+ \citep{aleithan2024swebenchplus} mostró que una parte importante de los aciertos aparentes no era genuina, lo que motiva la auditoría manual de trazas exitosas que pide el enunciado \citep{enunciadoproyecto2026}.
+
+\section{Entorno a utilizar}
+Usaremos el harness del Desafío (repositorio \texttt{harness-iagen-sudoku}). El modelo objetivo es \texttt{Qwen/Qwen3.5-2B}.
+\begin{itemize}
+  \item \textbf{Interfaz:} \texttt{reward(prompt, completion) -> float}. El parser exige un único bloque final \texttt{<answer>} con una matriz JSON y rechaza texto posterior.
+  \item \textbf{Tareas:} particiones train/eval/test, generadas con solución única, tres tamaños de tablero y tres niveles por tamaño. Las particiones no comparten puzzles.
+  \item \textbf{Recompensa:} $\text{reward}=\text{format}\cdot(w_{fill}\cdot fill\cdot clues\_frac+w_{solve}\cdot solved)$, con crédito parcial y $\text{reward}=1$ solo si la solución es válida. Se mantiene además la variante binaria.
+  \item \textbf{Datos derivados:} trazas correctas para SFT y pares correcta/incorrecta para DPO, generados con Qwen3.5-9B como profesor sobre la partición de entrenamiento y filtrados con el verificador. Estamos regenerándolos con la misma configuración.
+\end{itemize}
+\textbf{Línea base preliminar.} En la evaluación del Desafío ($n=8$ muestras por tarea, 10 tareas de validación por tamaño y nivel), solo 12 de 90 tareas tuvieron resultados mixtos (algunos aciertos y algunos fallos); todas están en $4\times4$ y $6\times6$ \emph{easy}/\emph{medium}. En $6\times6$ \emph{hard} y en todo $9\times9$ el modelo no acertó ninguna tarea. Esta zona sin señal, junto con el costo de generar y entrenar con $9\times9$, motiva descartar ese tamaño del entrenamiento (sección~\ref{sec:diseno}). Estamos recalculando las líneas base con una nueva versión en un cluster, por lo que estos números son provisionales y se actualizarán en la Entrega~2.
+
+\section{Propuesta de investigación}\label{sec:diseno}
+\subsection{Preguntas e hipótesis}
+\begin{description}[leftmargin=0pt]
+  \item[P1.] ¿El SFT previo acelera o limita el aprendizaje con RLVR? \emph{H1:} SFT$\to$RLVR converge más rápido que solo RLVR en la zona aprendible, pero con \passk\ final similar o menor para $k$ grande.
+  \item[P2.] ¿Cuánto generaliza cada estrategia a la partición de prueba, a niveles no vistos y a un tamaño de tablero no visto ($9\times9$)? \emph{H2:} RLVR generaliza mejor que SFT y DPO a niveles no vistos; SFT tiende a memorizar el formato de las trazas del profesor.
+  \item[P3.] ¿Aparece \emph{reward hacking} y bajo qué condiciones? \emph{H3:} aparecerá más con recompensa parcial que con la binaria, por ejemplo respuestas que copian pistas y adivinan el resto, o que explotan el formato.
+  \item[P4.] ¿Un currículo por número de celdas vacías mejora el entrenamiento con RLVR frente a mezclar dificultades? \emph{H4:} un currículo adaptativo alcanza la misma recompensa con menos pasos y llega a niveles que el entrenamiento con mezcla uniforme no resuelve (por ejemplo $6\times6$ \emph{hard}), porque mantiene los grupos de GRPO en la zona con señal.
+  \item[P5.] ¿Lo aprendido en Sudoku se transfiere, o se pierde, en tareas de razonamiento de otros entornos? \emph{H5:} el SFT degrada más el desempeño fuera de dominio que RLVR, que se mantiene más cerca del modelo base.
+\end{description}
+
+\subsection{Experimento central}
+Los cinco caminos (el modelo base como control y cuatro estrategias de entrenamiento) se evalúan sobre el mismo entorno, con presupuesto de cómputo comparable (criterio en la sección~\ref{sec:computo}).
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}clY@{}}
+\toprule
+\# & Camino & Descripción \\
+\midrule
+1 & Base (control) & Qwen3.5-2B sin entrenamiento adicional. \\
+2 & SFT & SFT con LoRA sobre trazas correctas del profesor. \\
+3 & SFT$\to$RLVR & Camino 2 seguido de GRPO con el verificador como recompensa. \\
+4 & RLVR & GRPO directamente desde el modelo base. \\
+5 & DPO & DPO con LoRA sobre pares correcta/incorrecta. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Diseño y ablations}
+\begin{itemize}
+  \item \textbf{Datos de entrenamiento y evaluación.} Se entrena solo con $4\times4$ y $6\times6$ (todos los niveles, ya que el currículo busca llegar a $6\times6$ \emph{hard}); los caminos 2 a 5 usan una mezcla fija de dificultades. Los $9\times9$ se excluyen del entrenamiento. Por la línea base, la zona con señal es $4\times4$ y $6\times6$ \emph{easy}/\emph{medium}. \pd{confirmar la mezcla tras la nueva línea base}
+  \item \textbf{Evaluación en $9\times9$.} Si se mantiene, mide generalización a un tamaño no visto. Con la línea base actual se espera \passuno\ cercano a cero, por lo que podría aportar poca información. \pd{mantener $9\times9$ en la evaluación o descartarlo del todo}
+  \item \textbf{Ablations (RLVR).} Tamaño de grupo $G$, coeficiente KL, forma de la recompensa (binaria vs.\ parcial) y mezcla de dificultades. \pd{cuáles son viables con el cómputo}
+  \item \textbf{Contribución (nivel 3): currículo por celdas vacías.} En lugar de los tres niveles gruesos, se usa el número de celdas vacías como eje continuo de dificultad. Se entrena GRPO con tres variantes de muestreo de tareas: (a) \emph{mezcla uniforme} sobre todo el rango (baseline); (b) \emph{currículo fijo}, con un calendario creciente de celdas vacías; (c) \emph{currículo adaptativo}, que avanza al siguiente rango cuando el \passuno\ de entrenamiento reciente supera un umbral $\tau$ y retrocede si cae bajo uno inferior. Así se llega más allá de la zona actual, hasta $6\times6$ \emph{hard}. La comparación es contra GRPO base, con igual cómputo, y se reportan curvas de recompensa y \passk\ por número de celdas vacías. \pd{umbral $\tau$, calendario, tamaño de ventana}
+  \item \textbf{Eje de dificultad entre tamaños.} Las celdas vacías no son comparables entre tableros (12 vacías es el máximo en $4\times4$, pero en $6\times6$ corresponde a \emph{easy}). Opciones: currículo por tamaño y dentro de cada tamaño por celdas vacías, o un orden global por dificultad empírica (\passuno\ de la línea base). \pd{elegir el eje}
+  \item \textbf{Soporte en el entorno.} El generador ya produce tareas por rangos de celdas vacías (\texttt{LEVELS}) y la partición de prueba admite conteos fijos (\texttt{TEST\_CELLS}). El conjunto actual (\texttt{data/sudoku}) tiene solo 50 tareas de entrenamiento por tamaño y nivel (150 por tamaño). Para un currículo fino ($4\times4$ tiene 9 conteos de celdas y $6\times6$ tiene 17) hay que generar más tareas, con un nivel por conteo, y escribir un muestreador de tareas para el currículo. La partición de prueba usa conteos fijos y no cambia.
+  \item \textbf{Métricas.} \passuno\ y \passk\ por nivel de dificultad y por número de celdas vacías, con el estimador insesgado de \citet{chen2021codex}, en la partición de prueba, y varias semillas ($\geq 3$ si el cómputo lo permite). Todos los resultados se reportan con la \emph{versión final} del verificador.
+  \item \textbf{Evaluación en otros entornos.} Los modelos de los cinco caminos se evaluarán, sin entrenar en ellos, con harness de otros grupos del curso, para medir transferencia u olvido respecto al modelo base. Como esos entornos se publicarán durante esta semana, los elegiremos una vez disponibles, con este criterio: (i) que respeten la interfaz común \texttt{reward(prompt, completion) -> float}; (ii) que sean de razonamiento o de uso de herramientas y no de memorización; (iii) que el modelo base tenga \passuno\ distinto de cero, para que la comparación sea informativa; y (iv) que la inferencia sea de bajo costo. Se reporta \passuno\ y \passk\ como en Sudoku, y se compara cada camino contra el modelo base. Si no hay harness de otros grupos utilizables, usaremos como respaldo tareas públicas de Reasoning Gym \citep{stojanovski2025reasoninggym} distintas del Sudoku. \pd{cuál o cuáles harness; cuántas tareas por entorno}
+  \item \textbf{Auditoría manual.} Muestra de trazas exitosas de cada camino, revisada a mano para estimar qué fracción de los aciertos es genuina (razonamiento válido), al estilo de \citet{aleithan2024swebenchplus}. \pd{tamaño de la muestra y quién audita}
+\end{itemize}
+
+\subsection{Ciclo de iteración y bloques del sistema}
+Registraremos cada iteración: qué se observó en las trazas, qué se corrigió en el entorno o el verificador y su efecto. La figura~\ref{fig:bloques} resume el sistema.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=0.55cm and 0.45cm,
+  b/.style={draw,rounded corners,align=center,minimum height=0.9cm,inner sep=4pt,font=\footnotesize},
+  >={Stealth[length=2mm]}]
+  \node[b] (gen) {Generador\\de tareas};
+  \node[b,right=of gen] (prof) {Profesor 9B\\+ verificador};
+  \node[b,right=of prof] (data) {Trazas SFT\\Pares DPO};
+  \node[b,below=of data] (train) {Entrenamiento\\SFT / DPO / GRPO};
+  \node[b,left=of train] (model) {Qwen3.5-2B\\(LoRA)};
+  \node[b,left=of model] (eval) {Evaluación\\pass@1, pass@$k$};
+  \node[b,right=of train] (cur) {Currículo\\(celdas vacías)};
+  \node[b,below=0.5cm of model,xshift=-1.3cm] (aud) {Auditoría de trazas\\y reward hacking};
+  \node[b,right=of aud] (fix) {Corregir entorno\\o verificador};
+  \draw[->] (gen)--(prof); \draw[->] (prof)--(data); \draw[->] (data)--(train);
+  \draw[->] (cur)--(train); \draw[->] (train)--(model); \draw[->] (model)--(eval); \draw[->] (eval)--(aud);
+  \draw[->] (aud)--(fix); \draw[->] (fix.south) -- ++(0,-0.4) -| ([xshift=-4mm]eval.west) |- (gen.west);
+\end{tikzpicture}
+\caption{Diagrama de bloques tentativo. El verificador también es la recompensa del RL, y el currículo decide qué tareas ve el entrenamiento.}
+\label{fig:bloques}
+\end{figure}
+
+\section{Cómputo y riesgos}\label{sec:computo}
+Usaremos un cluster con una GPU NVIDIA RTX A6000 (48\,GB). SFT y DPO con LoRA son de bajo costo; GRPO es lo más caro, por lo que limitaremos el largo de las respuestas y el tamaño del entorno. Podemos solicitar acceso a Peteroa si se justifica.
+
+\textbf{Comparación a cómputo equivalente.} Los métodos tienen estructuras de costo distintas: SFT y DPO procesan datos fijos, mientras que GRPO genera $G$ respuestas por prompt y luego actualiza. Por ello proponemos:
+\begin{itemize}
+  \item \emph{Presupuesto común} $B$ en tokens procesados por el modelo objetivo (generados y de entrenamiento) y en horas de GPU en la A6000, fijado según lo que permita el GRPO, que es el más caro. SFT$\to$RLVR reparte el mismo $B$ entre sus dos etapas.
+  \item \emph{Curvas contra cómputo acumulado}: se evalúan checkpoints a marcas fijas de $B$ y se grafica \passuno\ contra tokens y horas de GPU, de modo que la igualdad de cómputo se lee en la curva y no depende de un único punto de parada.
+  \item \emph{Configuración común}: mismo rango LoRA, mismo largo máximo de respuesta y mismo presupuesto de evaluación en todos los caminos.
+  \item \emph{Costo de datos por separado}: las trazas SFT y los pares DPO requieren inferencia del profesor (9B), que RLVR no necesita. Ese costo se reporta aparte y no se descuenta de $B$.
+\end{itemize}
+\pd{valor de $B$, y si el costo del profesor se incluye en alguna comparación}
+
+\begin{description}[leftmargin=0pt]
+  \item[Sin señal en RL.] Si el modelo nunca acierta, no hay gradiente. \emph{Mitigación:} concentrarse en la zona aprendible y, si hace falta, calentar con SFT.
+  \item[Verificador explotable.] \emph{Mitigación:} casos de prueba adversariales, inspección de trazas y reentrenamiento con el verificador corregido.
+  \item[El currículo no aporta o se estanca.] Un umbral mal calibrado puede detener el avance o saltar demasiado rápido. \emph{Mitigación:} calendario fijo como alternativa y registro de la dificultad muestreada durante el entrenamiento.
+  \item[Harness de otros grupos no disponibles o incompatibles.] \emph{Mitigación:} elegir al menos dos candidatos, verificar la interfaz y que el modelo base tenga señal antes de comprometerse, y dejar esta evaluación como secundaria si no se puede hacer a tiempo.
+  \item[Cómputo insuficiente para varias semillas.] \emph{Mitigación:} priorizar semillas en los caminos 3 y 4 y en las variantes de currículo, y reducir ablations.
+\end{description}
+
+\section{Cronograma}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lY@{}}
+\toprule
+Fecha & Hito \\
+\midrule
+11 nov & Entrega 1: esta propuesta. \\
+11--25 nov & Línea base final (cluster), datos SFT/DPO, entrenamiento de SFT y DPO, primeras curvas de recompensa GRPO. \\
+25 nov & Entrega 2: informe de avance (línea base, implementación inicial, curvas de recompensa). Elegir los harness externos. \\
+25 nov -- 9 dic & Caminos 3 y 4 completos, currículo y ablations, auditoría manual, redacción del paper y del póster. \\
+9 dic & Entrega 3: paper (7 páginas), póster y video. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\bibliographystyle{plainnat}
+\bibliography{Bibliografia}
+\end{document}
