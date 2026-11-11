@@ -7,7 +7,7 @@ import json
 import random
 import unittest
 
-from dataset import LEVELS, blank_cells, board, case_from_record, generate, make_record
+from dataset import LEVELS, TEST_CELLS, blank_cells, board, case_from_record, generate, make_record
 from evaluation import evaluate
 from reward import reward
 from sudoku import count_solutions, evaluate_grid, random_solution, task_from_prompt
@@ -88,6 +88,28 @@ class DatasetTest(unittest.TestCase):
         record = self.dataset["test"][0]
         report = evaluate(answer(record["solution"]), case_from_record(record))
         self.assertTrue(report["passed"])
+
+    def test_cell_grid_gives_the_test_split_fixed_blank_counts(self):
+        grid = generate(COUNTS, seed=7, test_grid="cells")
+        counts = {(r["size"], r["level"]): set() for r in grid["test"]}
+        for record in grid["test"]:
+            counts[record["size"], record["level"]].add(record["empty_cells"])
+        expected = {(size, f"n{cells}"): {cells}
+                    for size, cells_list in TEST_CELLS.items() for cells in cells_list}
+        self.assertEqual(counts, expected)
+        self.assertEqual(len(grid["test"]), COUNTS["test"] * len(expected))
+        # Eval and train keep the difficulty levels, and nothing is shared.
+        self.assertEqual({r["level"] for r in grid["eval"] + grid["train"]},
+                         {"easy", "medium", "hard"})
+        keys = [(r["size"], json.dumps(r["puzzle"]))
+                for records in grid.values() for r in records]
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertTrue(all(r["unique_solution"] for r in grid["test"]))
+
+    def test_cell_grid_does_not_change_the_default(self):
+        self.assertEqual(generate(COUNTS, seed=7, test_grid="levels"), self.dataset)
+        with self.assertRaises(ValueError):
+            generate(COUNTS, test_grid="other")
 
     def test_without_uniqueness_reaches_requested_blanks(self):
         record = make_record("train", 4, "hard", 0, seed=7, unique=False)

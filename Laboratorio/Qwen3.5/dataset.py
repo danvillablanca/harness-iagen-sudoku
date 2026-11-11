@@ -38,6 +38,14 @@ LEVELS = {
     9: {"easy": (10, 20), "medium": (21, 35), "hard": (36, 50)},
 }
 
+# Fixed blank-cell counts for the test split (`--test-grid cells`): one level
+# per count, named "n<count>". Each is reachable with a unique solution.
+TEST_CELLS = {4: (4, 8, 12), 6: (8, 16, 24), 9: (10, 30, 50)}
+CELL_LEVELS = {
+    size: {f"n{cells}": (cells, cells) for cells in counts}
+    for size, counts in TEST_CELLS.items()
+}
+
 SPLITS = ("train", "eval", "test")
 
 MAX_ATTEMPTS = 200
@@ -75,13 +83,14 @@ def blank_cells(solution, case, empty_cells, rng, unique=True):
     return puzzle if removed == empty_cells else None
 
 
-def make_record(split, size, level, index, seed=0, unique=True, seen=None):
+def make_record(split, size, level, index, seed=0, unique=True, seen=None, levels=None):
     """One task, deterministic in (seed, split, size, level, index).
 
     Puzzles already in `seen` are skipped, so splits never share a puzzle.
+    `levels` maps level names to blank-cell ranges (default: LEVELS[size]).
     """
     case = board(size)
-    low, high = LEVELS[size][level]
+    low, high = (levels or LEVELS[size])[level]
     for attempt in range(MAX_ATTEMPTS):
         rng = random.Random(f"{seed}:{split}:{size}:{level}:{index}:{attempt}")
         empty_cells = rng.randint(low, high)
@@ -115,20 +124,26 @@ def make_record(split, size, level, index, seed=0, unique=True, seen=None):
     )
 
 
-def generate(counts, sizes=(4, 6, 9), seed=0, unique=True):
+def generate(counts, sizes=(4, 6, 9), seed=0, unique=True, test_grid="levels"):
     """`counts` maps each split to the number of tasks per size and level.
 
     Splits are generated in order (test first), so adding training tasks
-    never changes the evaluation and test sets.
+    never changes the evaluation and test sets. With `test_grid="cells"` the
+    test split uses the fixed blank-cell counts of CELL_LEVELS instead of
+    LEVELS; train and eval keep LEVELS, and no puzzle is shared.
     """
+    if test_grid not in ("levels", "cells"):
+        raise ValueError("test_grid must be 'levels' or 'cells'.")
     seen = set()
     dataset = {split: [] for split in SPLITS}
     for split in ("test", "eval", "train"):
         for size in sizes:
-            for level in LEVELS[size]:
+            levels = CELL_LEVELS[size] if split == "test" and test_grid == "cells" \
+                else LEVELS[size]
+            for level in levels:
                 for index in range(counts.get(split, 0)):
                     dataset[split].append(
-                        make_record(split, size, level, index, seed, unique, seen)
+                        make_record(split, size, level, index, seed, unique, seen, levels)
                     )
     return dataset
 
@@ -174,6 +189,13 @@ def parse_args() -> argparse.Namespace:
                         help="test tasks per size and level")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
+        "--test-grid",
+        choices=["levels", "cells"],
+        default="levels",
+        help="test split by difficulty levels, or by fixed blank-cell counts "
+             f"{TEST_CELLS} (default: levels)",
+    )
+    parser.add_argument(
         "--unique",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -187,7 +209,7 @@ def main() -> int:
     counts = {"train": args.train, "eval": args.eval, "test": args.test}
     if any(count < 0 for count in counts.values()):
         raise SystemExit("Task counts must be >= 0.")
-    dataset = generate(counts, args.sizes, args.seed, args.unique)
+    dataset = generate(counts, args.sizes, args.seed, args.unique, args.test_grid)
     save(dataset, args.out)
     for split, records in dataset.items():
         print(f"{split}: {len(records)} tasks -> {Path(args.out) / f'{split}.jsonl'}")

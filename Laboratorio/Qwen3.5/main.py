@@ -4,7 +4,7 @@ from config import ModelConfig
 from display import print_result
 from evaluation import evaluate
 from models import load_model
-from prompts import make_case
+from prompts import SHOT_FORMATS, make_case
 from timing import timed
 
 
@@ -42,6 +42,12 @@ def parse_args() -> argparse.Namespace:
         help="seed for generating the worked-example puzzles",
     )
     parser.add_argument(
+        "--shot-format",
+        choices=SHOT_FORMATS,
+        default="steps",
+        help="reasoning format of the worked examples (default: steps)",
+    )
+    parser.add_argument(
         "--max-prompt-tokens",
         type=int,
         default=None,
@@ -61,7 +67,8 @@ def main() -> int:
         max_prompt_tokens=max_prompt_tokens,
     )
     case = make_case(
-        "sudoku9x9", "hard", args.empty_cells, args.seed, args.shots, args.shot_seed
+        "sudoku9x9", "hard", args.empty_cells, args.seed, args.shots, args.shot_seed,
+        args.shot_format,
     )
 
     model, load_seconds = timed(load_model, config)

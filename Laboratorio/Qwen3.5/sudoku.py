@@ -193,6 +193,11 @@ def _candidates(grid, r, c, case):
     return [v for v in range(1, size + 1) if v not in used]
 
 
+def cell_candidates(grid, r, c, case):
+    """Digits that can still go in cell (r, c) given its row, column and box."""
+    return _candidates(grid, r, c, case)
+
+
 def _most_constrained_cell(grid, case):
     """Empty cell with the fewest candidates as (r, c, options), or None."""
     size = case["size"]
