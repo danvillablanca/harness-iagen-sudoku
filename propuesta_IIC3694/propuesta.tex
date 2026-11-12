@@ -11,7 +11,7 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb,booktabs,tabularx,array,enumitem,xcolor,graphicx}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,shapes.geometric,babel}
+\usetikzlibrary{babel,positioning,arrows.meta,shapes.geometric}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[hidelinks]{hyperref}
 \setlength{\parskip}{0.45em}\setlength{\parindent}{0pt}
@@ -60,14 +60,30 @@ Estas preguntas son difíciles de estudiar a escala de laboratorio de frontera, 
 \textbf{Nuestra posición.} A diferencia de estos trabajos, combinamos en un mismo entorno barato de verificar la comparación de los cinco caminos de entrenamiento, un currículo con una variable de dificultad explícita y una auditoría de los aciertos.
 
 \section{Entorno a utilizar}
-Usaremos el harness del Desafío (repositorio \texttt{harness-iagen-sudoku}). El modelo objetivo es \texttt{Qwen/Qwen3.5-2B}.
+Emplearemos el \emph{harness} desarrollado por nuestro grupo para el Desafío (cuyo repositorio será publicado próximamente) para entrenar el modelo \texttt{Qwen/Qwen3.5-2B}.
+
 \begin{itemize}
-  \item \textbf{Interfaz:} \texttt{reward(prompt, completion) -> float}. El parser exige un único bloque final \texttt{<answer>} con una matriz JSON y rechaza texto posterior.
-  \item \textbf{Tareas:} particiones train/eval/test, generadas con solución única, tres tamaños de tablero y tres niveles por tamaño. Las particiones no comparten puzzles.
-  \item \textbf{Recompensa:} $\text{reward}=\text{format}\cdot(w_{fill}\cdot fill\cdot clues\_frac+w_{solve}\cdot solved)$, con crédito parcial y $\text{reward}=1$ solo si la solución es válida. Se mantiene además la variante binaria.
-  \item \textbf{Datos derivados:} trazas correctas para SFT y pares correcta/incorrecta para DPO, generados con Qwen3.5-9B como profesor sobre la partición de entrenamiento y filtrados con el verificador. Estamos regenerándolos con la misma configuración.
+  \item \textbf{Interfaz:} \texttt{reward(prompt, completion) -> float}. El modelo puede razonar libremente antes de responder, pero su salida debe finalizar con un único bloque \texttt{<answer>...</answer>} que contenga el tablero como una matriz JSON de $N\times N$ enteros. El \emph{parser} invalida la respuesta ($\text{format}=0$) si existe texto posterior a dicho bloque, si aparece más de una etiqueta \texttt{<answer>} o si esta se encuentra anidada dentro del bloque de razonamiento (\texttt{<think>}). De este modo, se evita que el modelo burle al verificador entregando múltiples soluciones candidatas.
+
+  \item \textbf{Tareas:} \emph{Splits} de \emph{train/eval/test} disjuntas entre sí, compuestas por tableros con solución única distribuidos en tres tamaños y tres niveles de dificultad por tamaño.
+
+  \item \textbf{Función de recompensa:} Se define como 
+  \[
+    \text{reward} = \text{format} \cdot (w_{\text{fill}} \cdot \text{fill} \cdot \text{clues\_frac} + w_{\text{solve}} \cdot \text{solved}),
+  \]
+  sujeta a $w_{\text{fill}} + w_{\text{solve}} = 1$ (por defecto, $0.5$ cada uno). Dado que todos los factores pertenecen al intervalo $[0,1]$, la recompensa resultante también está acotada en dicho rango. Cada componente evalúa un aspecto específico:
+  \begin{itemize}
+    \item $\text{format} \in \{0,1\}$: Toma el valor $1$ si la salida respeta estrictamente el contrato estructural descrito; en caso contrario, anula la recompensa total.
+    \item $\text{clues\_frac} \in [0,1]$: Proporción de pistas iniciales del tablero que se mantienen intactas, penalizando errores al copiar la entrada.
+    \item $\text{fill} \in [0,1]$: Proporción de celdas originalmente vacías que coinciden con la solución única. Actúa como crédito parcial por avance, contabilizando como error tanto los ceros como los valores fuera de rango.
+    \item $\text{solved} \in \{0,1\}$: Toma el valor $1$ si el tablero cumple las reglas del Sudoku (filas, columnas y subcuadrículas válidas) y conserva todas las pistas originales, aceptando cualquier solución válida.
+  \end{itemize}
+  Así, una solución completa otorga $\text{reward}=1$, mientras que un tablero bien formateado que conserva las pistas pero acierta solo $40$ de $50$ celdas vacías obtiene $0.5 \cdot 0.8 = 0.4$. Como línea de comparación (\emph{ablation}), evaluaremos también una variante binaria ($\text{reward} = \text{format} \cdot \text{solved}$) para aislar el impacto del crédito parcial.
+
+  \item \textbf{Datos generados:} Trazas de razonamiento correctas para SFT y pares de respuestas correcta/incorrecta para DPO, generados sobre el \emph{split} de entrenamiento utilizando \texttt{Qwen3.5-9B} como modelo profesor y filtrados mediante el verificador.
 \end{itemize}
-\textbf{Línea base preliminar.} En la evaluación del Desafío ($n=8$ muestras por tarea, 10 tareas de validación por tamaño y nivel), solo 12 de 90 tareas tuvieron resultados mixtos (algunos aciertos y algunos fallos); todas están en $4\times4$ y $6\times6$ \emph{easy}/\emph{medium}. En $6\times6$ \emph{hard} y en todo $9\times9$ el modelo no acertó ninguna tarea. Esta zona sin señal, junto con el costo de generar y entrenar con $9\times9$, motiva descartar ese tamaño del entrenamiento (sección~\ref{sec:diseno}). Estamos recalculando las líneas base con una nueva versión en un cluster, por lo que estos números son provisionales y se actualizarán en la Entrega~2.
+
+\textbf{\emph{Baseline} preliminar.} Para cada tarea se muestrean $n$ respuestas independientes del modelo (con temperatura $T > 0$) y se evalúan con el verificador; a partir de la proporción de aciertos se calcula el estimador insesgado de \passk\ (con $k \le n$) siguiendo a \citet{chen2021codex}. En una evaluación inicial del modelo de 9B para el Desafío ($n=8$ muestras en $10$ tareas de validación por combinación de tamaño y dificultad, totalizando $80$ respuestas por celda), solo $12$ de las $90$ tareas presentaron resultados mixtos (combinación de aciertos y fallos). Estas se concentraron exclusivamente en los tableros de $4\times4$ (en todos sus niveles) y en los de $6\times6$ de dificultad \emph{easy} y \emph{medium}. Por el contrario, el modelo no resolvió ninguna instancia en $6\times6$ \emph{hard} ni en los tableros de $9\times9$. Esta ausencia de señal de aprendizaje, sumada al alto costo computacional de generar datos y entrenar sobre tableros de $9\times9$, justifica descartar dicho tamaño en la etapa de entrenamiento. Actualmente estamos recalculando estas métricas con un conjunto de datos ampliado, por lo que los valores reportados son provisionales y serán actualizados en la Entrega~2.
 
 \section{Propuesta de investigación}\label{sec:diseno}
 \subsection{Preguntas e hipótesis}
@@ -134,23 +150,34 @@ Registraremos cada iteración: qué se observó en las trazas, qué se corrigió
 \end{figure}
 
 \section{Cómputo y riesgos}\label{sec:computo}
-Usaremos un cluster con una GPU NVIDIA RTX A6000 (48\,GB). SFT y DPO con LoRA son de bajo costo; GRPO es lo más caro, por lo que limitaremos el largo de las respuestas y el tamaño del entorno. Podemos solicitar acceso a Peteroa si se justifica.
 
-\textbf{Comparación a cómputo equivalente.} Los métodos tienen estructuras de costo distintas: SFT y DPO procesan datos fijos, mientras que GRPO genera $G$ respuestas por prompt y luego actualiza. Por ello proponemos:
+Los experimentos se ejecutarán en un clúster equipado con una GPU NVIDIA RTX A6000 (48\,GB). Mientras que SFT y DPO con LoRA presentan un bajo costo computacional, GRPO es significativamente más exigente debido al muestreo en línea, por lo que acotaremos tanto la longitud máxima de las respuestas como la complejidad del entorno.
+
+\textbf{Comparación a cómputo equivalente.} Los métodos evaluados tienen estructuras de costo distintas: SFT y DPO operan sobre conjuntos de datos estáticos, mientras que GRPO genera $G$ respuestas por \emph{prompt} antes de cada actualización. Para garantizar una comparación justa, establecemos los siguientes criterios:
 \begin{itemize}
-  \item \emph{Presupuesto común} $B$ en tokens procesados por el modelo objetivo (generados y de entrenamiento) y en horas de GPU en la A6000, fijado según lo que permita el GRPO, que es el más caro. SFT$\to$RLVR reparte el mismo $B$ entre sus dos etapas.
-  \item \emph{Curvas contra cómputo acumulado}: se evalúan checkpoints a marcas fijas de $B$ y se grafica \passuno\ contra tokens y horas de GPU, de modo que la igualdad de cómputo se lee en la curva y no depende de un único punto de parada.
-  \item \emph{Configuración común}: mismo rango LoRA, mismo largo máximo de respuesta y mismo presupuesto de evaluación en todos los caminos.
-  \item \emph{Costo de datos por separado}: las trazas SFT y los pares DPO requieren inferencia del profesor (9B), que RLVR no necesita. Ese costo se reporta aparte y no se descuenta de $B$.
+  \item \textbf{Presupuesto común ($B$):} Se define en términos de tokens procesados por el modelo objetivo (tanto generados como de entrenamiento) y horas de GPU en la A6000, acotado por la capacidad de ejecución de GRPO. El esquema secuencial SFT$\to$RLVR distribuye este mismo presupuesto $B$ entre sus dos etapas.
+  \item \textbf{Curvas frente a cómputo acumulado:} Se evalúan \emph{checkpoints} en intervalos fijos de $B$ para graficar \passuno\ en función de los tokens y las horas de GPU. De este modo, la equivalencia computacional se observa directamente en la curva de aprendizaje sin depender de un único criterio de parada.
+  \item \textbf{Configuración homogénea:} Todos los enfoques comparten el mismo rango de LoRA, la misma longitud máxima de respuesta y un presupuesto de evaluación idéntico.
+  \item \textbf{Contabilidad separada del costo de datos:} La generación de trazas para SFT y de pares para DPO requiere inferencia del modelo profesor (9B), un gasto ausente en RLVR puro. Este costo se reportará por separado y no se descontará de $B$.
 \end{itemize}
-\pd{valor de $B$, y si el costo del profesor se incluye en alguna comparación}
 
+\textbf{Calibración del presupuesto $B$.} Fijamos $B = 15\text{M}$ de tokens generados por ejecución de GRPO (equivalente a unos $200$ pasos con $16$ entradas y $G=8$), con un límite máximo de $5$ horas de GPU en la A6000 por ejecución. Con la longitud de respuesta estimada, este margen permite realizar aproximadamente $16$ ejecuciones completas de GRPO. Dado que SFT y DPO consumen solo una fracción de $B$, reportaremos su gasto real sin aplicar compensaciones artificiales. Por su parte, SFT$\to$RLVR descontará el costo de la etapa supervisada de su presupuesto total $B$, y el costo de inferencia del profesor (\texttt{Qwen3.5-9B}) se mantendrá aislado del análisis comparativo. Estas estimaciones se recalibrarán en la Entrega~2 utilizando el \emph{throughput} medido en la A6000 y la longitud media de respuesta del nuevo \emph{baseline}.
+
+\textbf{Análisis de riesgos.} A continuación, detallamos los principales riesgos técnicos y experimentales junto con sus mecanismos de detección y mitigación:
 \begin{description}[leftmargin=0pt]
-  \item[Sin señal en RL.] Si el modelo nunca acierta, no hay gradiente. \emph{Mitigación:} concentrarse en la zona aprendible y, si hace falta, calentar con SFT.
-  \item[Verificador explotable.] \emph{Mitigación:} casos de prueba adversariales, inspección de trazas y reentrenamiento con el verificador corregido.
-  \item[El currículo no aporta o se estanca.] Un umbral mal calibrado puede detener el avance o saltar demasiado rápido. \emph{Mitigación:} calendario fijo como alternativa y registro de la dificultad muestreada durante el entrenamiento.
-  \item[Harness de otros grupos no disponibles o incompatibles.] \emph{Mitigación:} elegir al menos dos candidatos, verificar la interfaz y que el modelo base tenga señal antes de comprometerse, y dejar esta evaluación como secundaria si no se puede hacer a tiempo.
-  \item[Cómputo insuficiente para varias semillas.] \emph{Mitigación:} priorizar semillas en los caminos 3 y 4 y en las variantes de currículo, y reducir ablations.
+  \item[Ausencia de señal en RL.] GRPO actualiza la política comparando las recompensas relativas de las $G$ respuestas generadas para un mismo \emph{prompt}. Si el modelo falla o acierta sistemáticamente en todas las muestras de un grupo, las recompensas son idénticas, la ventaja se anula y el gradiente desaparece. \emph{Detección:} Monitoreo de la proporción de grupos con recompensa constante y estancamiento en la curva de recompensa inicial. \emph{Mitigación:} Restringir el entrenamiento a instancias dentro de la zona con señal, filtrar grupos sin varianza y aplicar un precalentamiento mediante SFT antes de RLVR (esquema SFT$\to$RLVR) si el modelo base carece de aciertos iniciales.
+
+  \item[Incumplimiento del formato de salida.] Dado que el factor $\text{format}$ multiplica toda la función de recompensa, un modelo que omita o duplique el bloque \texttt{<answer>} recibirá siempre cero, anulando la señal de aprendizaje incluso cuando el razonamiento sea válido. Este problema se agrava si la generación se trunca por alcanzar el límite de tokens antes de cerrar la etiqueta. \emph{Detección:} Seguimiento de las tasas de formato válido y de truncamiento en cada experimento. \emph{Mitigación:} Aumentar la longitud máxima de generación, incluir ejemplos de formato en el \emph{prompt} (\emph{few-shot}) o inicializar el entrenamiento desde un modelo ajustado con SFT.
+
+  \item[\emph{Reward hacking}.] La política podría descubrir atajos que incrementen la recompensa sin resolver realmente el Sudoku; por ejemplo, bajo recompensa parcial, copiar las pistas y completar el resto al azar otorga un puntaje positivo, o bien podría explotar vulnerabilidades del \emph{parser}. \emph{Detección:} Inspección periódica de trazas con alta recompensa, análisis de divergencias entre la recompensa media y la tasa real de resolución ($\text{solved}$) y auditorías manuales. \emph{Mitigación:} Diseño de pruebas unitarias adversariales (como múltiples bloques \texttt{<answer>}, texto posterior al cierre, tableros vacíos o rellenos aleatorios) que deban puntuar cero o mínimo; ante cualquier falla detectada, se parchará el verificador, se incorporará el caso a la batería de pruebas y se reentrenarán los modelos afectados.
+
+  \item[Estancamiento o ineficacia del currículo.] Un umbral de avance $\tau$ demasiado exigente bloqueará el currículo adaptativo en las tareas más simples, mientras que uno muy laxo desplazará el entrenamiento hacia instancias sin señal. Asimismo, un resultado nulo (donde el currículo no supere al muestreo uniforme) es científicamente válido, pero debe distinguirse de una mala calibración. \emph{Detección:} Registro continuo de la distribución de dificultades muestreadas por paso. \emph{Mitigación:} Calibrar $\tau$ apoyándose en los resultados de la línea base y utilizar un calendario fijo (incremento de dificultad predeterminado por etapas) como alternativa determinista.
+
+  \item[Escasez de instancias de entrenamiento.] El conjunto actual dispone de $50$ tareas por combinación de tamaño y nivel ($450$ en total). Bajo el presupuesto $B$, el modelo recorrerá estas instancias múltiples veces, lo que conlleva el riesgo de sobreajuste por memorización de tableros específicos en lugar de generalización. \emph{Detección:} Brecha creciente en \passuno\ entre los conjuntos de entrenamiento y prueba. \emph{Mitigación:} Generar instancias adicionales y, de ser necesario, sintetizar nuevas trazas con el modelo profesor.
+
+  \item[Indisponibilidad o incompatibilidad de entornos externos.] Los \emph{harnesses} desarrollados por otros grupos aún no están publicados y podrían presentar barreras técnicas o un costo de evaluación prohibitivo. \emph{Mitigación:} Preseleccionar al menos dos entornos candidatos, validar su interfaz y el \passuno\ del modelo base antes de integrarlos, utilizar tareas de \emph{Reasoning Gym} como alternativa de respaldo y relegar esta evaluación a un plano secundario si surgen restricciones de tiempo.
+
+  \item[Insuficiencia de cómputo.] Si el presupuesto de GPU resulta insuficiente para cubrir toda la matriz experimental, se perderán repeticiones con distintas semillas aleatorias, reduciendo el poder estadístico para distinguir mejoras reales del ruido. \emph{Mitigación:} Priorizar múltiples semillas en los enfoques centrales (SFT$\to$RLVR, RLVR puro y las variantes de currículo), recortar estudios de ablación secundarios antes que semillas y guardar \emph{checkpoints} frecuentes para reanudar ejecuciones interrumpidas.
 \end{description}
 
 \section{Cronograma}
