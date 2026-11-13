@@ -65,6 +65,24 @@ def parse_skip(values):
     return skipped
 
 
+def parse_shard(value):
+    """`"1/5"` -> (1, 5): shard index and shard count, 0 <= index < count."""
+    if value is None:
+        return None
+    index, _, count = value.partition("/")
+    if not (index.isdigit() and count.isdigit()) or not 0 <= int(index) < int(count):
+        raise ValueError(f"--shard expects I/K with 0 <= I < K (e.g. 0/5), got {value!r}.")
+    return int(index), int(count)
+
+
+def take_shard(tasks, shard):
+    """Every K-th task starting at I, so each shard keeps the same size/level mix."""
+    if shard is None:
+        return tasks
+    index, count = shard
+    return tasks[index::count]
+
+
 def select_tasks(records, per_level=None, sizes=None, skip=()):
     """First `per_level` tasks of each (size, level), in file order.
 
@@ -149,8 +167,11 @@ def run(args):
         "shot_seed": args.shot_seed,
         "shot_format": args.shot_format,
     }
-    tasks = select_tasks(load(args.tasks), args.per_level, args.sizes,
-                         parse_skip(getattr(args, "skip", None)))
+    tasks = take_shard(
+        select_tasks(load(args.tasks), args.per_level, args.sizes,
+                     parse_skip(getattr(args, "skip", None))),
+        parse_shard(getattr(args, "shard", None)),
+    )
     path = output_path(args.out, args.model_id, args.thinking, args.shots,
                        args.shot_format)
     work = pending(tasks, load_samples(path), settings)
@@ -321,6 +342,9 @@ def parse_args():
     run_parser.add_argument("--sizes", type=int, nargs="+", default=None)
     run_parser.add_argument("--skip", nargs="+", default=None, metavar="SIZE:LEVEL",
                             help="leave out these (size, level) pairs, e.g. 6:hard")
+    run_parser.add_argument("--shard", default=None, metavar="I/K",
+                            help="run only every K-th selected task starting at I "
+                                 "(parallel jobs; give each its own --out)")
     run_parser.add_argument("--seed", type=int, default=0)
     run_parser.add_argument("--out", default="results", help="output directory")
 
@@ -337,6 +361,7 @@ def parse_args():
     if args.command == "run":
         try:
             parse_skip(args.skip)
+            parse_shard(args.shard)
         except ValueError as error:
             parser.error(str(error))
     return args
