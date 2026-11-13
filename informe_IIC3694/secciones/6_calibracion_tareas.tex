@@ -5,94 +5,85 @@
 Para que el aprendizaje reforzado tenga señal, el modelo objetivo debe
 acertar en algunos intentos de una tarea y fallar en otros. Cuando el
 entrenamiento compara varias respuestas a una misma tarea, aprende de las
-diferencias de recompensa entre ellas. Si los ocho intentos fallan, o si
-los ocho aciertan, todas las respuestas reciben la misma recompensa
-binaria y la tarea no aporta señal. Por ello, además de los promedios de
+diferencias de \emph{reward} entre ellas. Si los dieciséis intentos fallan, o si
+los dieciséis aciertan, todas las respuestas reciben el mismo \emph{reward}
+binario y la tarea no aporta señal. Por ello, además de los promedios de
 la sección~\ref{sec:resultados}, la tabla~\ref{tab:calibracion}
-clasifica cada tarea de validación según el número de respuestas
+clasifica cada tarea de la partición de prueba según el número de respuestas
 correctas del modelo objetivo.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Tareas de validación según el número de respuestas correctas
-  de Qwen3.5-2B ($n = 8$ por tarea, 10 tareas por grupo).}
+  \caption{Tareas de la partición de prueba según el número de respuestas
+  correctas de Qwen3.5-2B ($n = 16$ por tarea, 20 tareas por nivel). Cada celda
+  es sin aciertos (0/16) / mixtas (1/16 a 15/16) / siempre correctas (16/16).}
   \label{tab:calibracion}
-  \begin{tabular}{@{}llccc@{}}
+  \begin{tabular}{@{}llcc@{}}
     \toprule
-    Tablero & Nivel & Sin aciertos (0/8) & Mixtas (1/8 a 7/8)
-      & Siempre correctas (8/8) \\
+    Tablero & Casillas vacías & 0 \emph{shots} & 2 \emph{shots} \\
     \midrule
-    4x4 & easy   &  5 & 4 & 1 \\
-        & medium &  6 & 3 & 1 \\
-        & hard   &  9 & 1 & 0 \\
-    6x6 & easy   &  7 & 3 & 0 \\
-        & medium &  9 & 1 & 0 \\
-        & hard   & 10 & 0 & 0 \\
-    9x9 & easy   & 10 & 0 & 0 \\
-        & medium & 10 & 0 & 0 \\
-        & hard   & 10 & 0 & 0 \\
+    4x4 &  4 &  0 / 16 /  4 &  0 /  9 / 11 \\
+        &  8 &  0 / 20 /  0 &  0 / 19 /  1 \\
+        & 12 &  2 / 18 /  0 &  1 / 19 /  0 \\
+    6x6 &  8 &  2 / 18 /  0 &  0 / 20 /  0 \\
+        & 16 & 20 /  0 /  0 & 17 /  3 /  0 \\
+        & 24 & 20 /  0 /  0 & 20 /  0 /  0 \\
     \midrule
-    \multicolumn{2}{@{}l}{Total} & 76 & 12 & 2 \\
+    \multicolumn{2}{@{}l}{Total (120 tareas)} & 44 / 72 / 4 & 38 / 70 / 12 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Solo 12 de las 90 tareas (13\,\%) tienen resultados mixtos, y todas
-pertenecen a 4x4 o a 6x6 \emph{easy} y \emph{medium}. Únicamente 2 tareas
-se resuelven en los ocho intentos, por lo que el entorno no presenta
-problemas de saturación. La limitación es el exceso de dificultad. Según
-esta evidencia, las tareas se agrupan en tres zonas.
+Con 0 \emph{shots}, 72 de las 120 tareas (60\,\%) tienen resultados mixtos, y
+con 2 \emph{shots}, 70 (58\,\%). Casi todas las tareas de 4x4 y las de 6x6 con 8
+casillas son mixtas en las dos configuraciones, es decir, ninguna está fuera del
+alcance del modelo. Solo 4 tareas (0 \emph{shots}) y 12 (2 \emph{shots}) se
+resuelven en los dieciséis intentos, todas de 4x4 con 4 u 8 casillas, de modo que
+solo 4x4 con 4 casillas se acerca a la saturación. Según esta evidencia, las
+tareas de 4x4 y 6x6 se agrupan en tres zonas.
 \begin{description}[leftmargin=0pt]
-  \item[Zona aprendible:] 4x4 en sus tres niveles y 6x6 \emph{easy} y
-  \emph{medium}, con al menos una tarea mixta por grupo.
-  \item[Sin aciertos observados:] 6x6 \emph{hard} y los tres niveles de
-  9x9, donde el modelo objetivo no resolvió ninguna tarea en ocho
-  intentos.
-  \item[Saturada:] ningún grupo; solo dos tareas aisladas de 4x4.
+  \item[Zona aprendible:] 4x4 con 8 y 12 casillas y 6x6 con 8 casillas, con
+  prácticamente todas las tareas mixtas; con 2 \emph{shots}, 6x6 con 16 casillas
+  tiene 3 tareas mixtas.
+  \item[Casi saturada:] 4x4 con 4 casillas: con 2 \emph{shots}, 11 de 20 tareas
+  se resuelven en los dieciséis intentos y \passuno\ es 95\,\%.
+  \item[Sin aciertos observados:] 6x6 con 24 casillas en ambos modelos y
+  configuraciones, y 6x6 con 16 casillas para el 2B (20 de 20 tareas sin
+  aciertos con 0 \emph{shots}, 17 de 20 con 2).
 \end{description}
+Para el 9B (tabla~\ref{tab:prueba}), 6x6 con 16 casillas y 2 \emph{shots} es el
+nivel con más tareas mixtas (18 de 20).
 
-La relación entre \passuno\ y \texttt{pass@8} es coherente con esta
-clasificación. En 6x6 \emph{easy}, \passuno\ es 5,0\,\% y
-\texttt{pass@8} es 30,0\,\%. Los aciertos son escasos, pero están
-repartidos en tres tareas distintas, todas mixtas. En 4x4 \emph{medium},
-en cambio, los valores son 30,0\,\% y 40,0\,\%. En ese grupo, el modelo
-acierta casi siempre en tres tareas, dos con 7 de 8 aciertos y una con
-8 de 8, rara vez en una cuarta, con 2 de 8, y nunca en las seis
-restantes. Por eso, más intentos aportan poco.
+La relación entre \passuno\ y \texttt{pass@16} es coherente con esta
+clasificación. En 4x4 con 12 casillas, \passuno\ es 14\,\% y \texttt{pass@16} es
+90\,\% sin ejemplos: el modelo acierta ocasionalmente en casi todas las tareas, y
+más intentos aportan mucho. En 6x6 con 24 casillas, en cambio, ambos valores son
+0\,\%.
 
-Esta evidencia tiene un alcance limitado. Cada grupo contiene solo 10
-tareas, se usó una única semilla base y no se calcularon intervalos de
-confianza. Además, el modelo objetivo se evaluó en la partición de
-validación y no en la de entrenamiento, sobre la cual se aplicaría el
-aprendizaje reforzado. Ambas provienen del mismo generador, pero que el
-modelo se comporte igual en ellas es un supuesto. Por último, que un
-grupo no tenga aciertos en la muestra no implica que el modelo nunca
-pueda resolver esas tareas, como se discute en la
+Esta evidencia tiene un alcance limitado. Cada nivel contiene 20 tareas, se usó un
+único \emph{seed} base y no se calcularon intervalos de confianza. El modelo
+objetivo se evaluó en la partición de prueba y no en la de entrenamiento, sobre la
+cual se aplicaría el aprendizaje reforzado; ambas provienen del mismo generador,
+pero que el modelo se comporte igual en ellas es un supuesto. Los tableros de 9x9
+no se midieron en la prueba, por lo que su zona de aprendizaje no se conoce. Por
+último, que un nivel no tenga aciertos con un límite de 2.304 tokens no implica
+que el modelo no pueda resolverlo con más tokens, como se discute en la
 subsección~\ref{sec:ajustes}.
 
 \subsection{Ajustes propuestos y alcance de la evidencia}
 \label{sec:ajustes}
-El principal ajuste propuesto es ampliar la partición de validación antes
-de usarla para tomar decisiones de calibración. Con 10 tareas por grupo,
-cada tarea representa 10 puntos porcentuales de \texttt{pass@8}, por lo
-que diferencias como la inversión entre \emph{easy} y \emph{medium} del
-2B en 4x4 no se pueden distinguir de la variabilidad de la muestra. La
-limitación es más seria en los grupos sin aciertos. Si el 5\,\% de las
-tareas de un grupo se pudiera resolver en al menos uno de 8 intentos, una
-muestra de 10 tareas no mostraría ninguna con una probabilidad cercana
-al 60\,\%. Con 50 tareas por grupo, esa probabilidad baja a cerca del
-8\,\% y cada tarea pasa a representar 2 puntos porcentuales. Ampliar la
-validación requiere solo inferencia. Con 50 tareas por grupo y $n = 8$,
-son 3.600 respuestas por modelo, el mismo volumen que ya se generó con el
-profesor sobre la partición de entrenamiento. La partición de prueba se
-genera antes que la de validación y no cambiaría. Debe comprobarse, en
-cambio, que la ampliación conserve las tareas de validación actuales y no
-altere las de entrenamiento, sobre las que se generaron los datos
-derivados.
+El ajuste más importante es separar el truncamiento del error de razonamiento. En
+6x6 casi todas las respuestas alcanzan el límite de 2.304 tokens
+(tabla~\ref{tab:errores}), y en los pilotos del 9B con 8.192 tokens
+(sección~\ref{sec:pilotos}) las tres tareas de 6x6 probadas se resolvieron, aunque
+con muy pocas tareas. Antes de concluir que 6x6 con 16 o 24 casillas está fuera del
+alcance de un modelo de este tamaño, debe medirse el 2B con un límite mayor. Los
+demás ajustes pendientes son evaluar los tableros de 9x9 de la prueba (preparado pero no ejecutado), usar más
+\emph{seeds} y, si se quiere calibrar con la partición de validación, evaluarla
+completa: hoy solo se usó en pilotos de 6 a 18 tareas. Ampliarla requiere solo
+inferencia, y la partición de prueba, que se genera antes, no cambiaría.
 
-Este ajuste se propone, pero no se ha evaluado. Las decisiones de
-calibración se tomarán exclusivamente con la partición de validación, y
-la de prueba se mantiene reservada para la evaluación final. Además, los
+Este ajuste se propone, pero no se ha evaluado. Además, los
 resultados de inferencia orientan la calibración, pero por sí solos no
-demuestran que el entrenamiento vaya a mejorar al modelo objetivo en
-estos niveles.
+demuestran que el entrenamiento vaya a mejorar al modelo objetivo en estos
+niveles.

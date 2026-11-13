@@ -2,146 +2,141 @@
 \label{sec:cualitativo}
 
 \subsection{Clasificación de las respuestas}
-Para identificar el origen de los errores se clasificaron las 1.440
-respuestas de la línea base (720 por modelo) en categorías excluyentes,
-asignadas en el orden de la tabla~\ref{tab:errores}: primero las
-correctas; luego las que alcanzaron el límite de tokens; las que no
-cumplen el contrato de formato; las que copian el puzzle sin cambios; las
-que dejan casillas vacías; las que alteran alguna pista original, y, por
-último, las grillas completas con las pistas intactas que no cumplen las
-reglas. La clasificación se obtuvo volviendo a evaluar cada respuesta con
-el verificador; las 1.440 recompensas recalculadas coinciden con las
-registradas durante la corrida.
+Para identificar el origen de los fallos se clasificaron las 7.680 respuestas de
+la evaluación en la partición de prueba (sección~\ref{sec:prueba}) en categorías
+excluyentes, asignadas en el orden de la tabla~\ref{tab:errores}: primero las
+correctas (\emph{reward} 1); luego las que alcanzaron el límite de tokens; las
+que no cumplen el contrato de formato; las que alteran alguna pista original, y,
+por último, las grillas con el formato correcto y las pistas intactas que no
+resuelven el puzzle. La clasificación usa el motivo de término y los componentes
+del \emph{reward} registrados en cada respuesta.
+Además, se volvió a evaluar cada una de las 7.680 respuestas con el verificador
+actual: todos los \emph{rewards} recalculados coinciden con los registrados.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Clasificación de las respuestas de la línea base por modelo y
-  tamaño de tablero (240 respuestas por fila: 30 tareas por 8 respuestas).}
+  \caption{Clasificación de las respuestas de la prueba por modelo, \emph{shots} y
+  tamaño de tablero (960 respuestas por fila: 60 tareas por 16 respuestas).}
   \label{tab:errores}
-  \begin{tabularx}{\linewidth}{@{}llYYYYYYY@{}}
+  \begin{tabularx}{\linewidth}{@{}lccYYYYY@{}}
     \toprule
-    Modelo & Tablero & Correcta & Truncada & Formato & Copia el puzzle
-      & Deja vacías & Altera pistas & Grilla inválida \\
+    Modelo & \emph{Shots} & Tablero & Correcta & Truncada & Formato
+      & Altera pistas & Grilla incorrecta \\
     \midrule
-    2B & 4x4 & 45 &   3 & 10 &  5 & 104 &  7 &  66 \\
-       & 6x6 &  5 &   2 &  4 &  6 &  92 &  5 & 126 \\
-       & 9x9 &  0 &   0 &  0 & 15 & 179 & 12 &  34 \\
-       & Total & 50 & 5 & 14 & 26 & 375 & 24 & 226 \\
+    2B & 0 & 4x4 & 529 & 345 & 81 & 5 & 0 \\
+       & 0 & 6x6 &  67 & 889 &  4 & 0 & 0 \\
+       & 2 & 4x4 & 621 & 301 &  0 & 28 & 10 \\
+       & 2 & 6x6 & 137 & 822 &  0 & 1 & 0 \\
     \midrule
-    9B & 4x4 & 97 &  42 &  4 &  0 &  15 & 41 &  41 \\
-       & 6x6 & 19 & 110 &  0 &  0 &  24 &  9 &  78 \\
-       & 9x9 &  8 & 116 &  0 &  0 &  52 &  7 &  57 \\
-       & Total & 124 & 268 & 4 & 0 & 91 & 57 & 176 \\
+    9B & 0 & 4x4 & 856 & 104 &  0 & 0 & 0 \\
+       & 0 & 6x6 & 287 & 672 &  1 & 0 & 0 \\
+       & 2 & 4x4 & 855 &  97 &  0 & 3 & 5 \\
+       & 2 & 6x6 & 329 & 615 &  0 & 0 & 16 \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-Los dos modelos fallan de forma distinta. El error más frecuente del 2B es
-entregar un tablero con casillas sin llenar: ocurre en 375 de sus 720
-respuestas (52\,\%) y en 179 de las 240 de 9x9. En la mediana de estos
-casos, el modelo deja sin completar entre el 14\,\% y el 33\,\% de las
-casillas vacías, según el tamaño, y además copia el puzzle sin
-modificarlo en otras 26 respuestas. Es decir, el 2B casi siempre respeta
-el formato, pero con frecuencia no completa la tarea. El 9B rara vez
-deja casillas vacías en 4x4 y 6x6; sus fallos se concentran en las
-respuestas truncadas (268) y en las grillas completas que no cumplen las
-reglas (176).
-
-Las respuestas truncadas del 9B no ocultan soluciones correctas. En 242
-de las 268, el modelo ya había cerrado el bloque de respuesta y continuó
-escribiendo, por lo general tras detectar un error y empezar a resolver
-de nuevo, contra la instrucción de no escribir después de la respuesta.
-En ninguno de esos 242 casos el primer bloque contenía una solución
-válida: 218 tenían una grilla incorrecta y 24, un contenido que no es una
-matriz interpretable. Además, cualquier texto posterior al bloque, como
-una nueva respuesta, es rechazado por el verificador. Las 26 respuestas
-truncadas restantes se cortaron antes de cerrar el bloque.
-
-Por último, las grillas incorrectas que se pueden interpretar contienen
-una fracción relevante de valores correctos: en la mediana, entre el
-22\,\% y el 33\,\% de las casillas vacías coinciden con la solución en
-el 2B, y entre el 37\,\% y el 43\,\% en el 9B, según el tamaño. Una
-recompensa binaria asigna 0 a todas estas respuestas por igual.
+El fallo dominante es el truncamiento: 3.851 de las 7.680 respuestas (50,1\,\%)
+alcanzaron el límite de 2.304 tokens, el 61,4\,\% de las del 2B y el 38,8\,\% de
+las del 9B, y en 6x6 es la causa de entre el 64\,\% y el 93\,\% de las respuestas
+según el modelo y la configuración. Casi todos los demás fallos son de formato o
+de pistas alteradas; las grillas con el formato correcto y las pistas intactas
+pero incorrectas son raras (31 respuestas, el 0,4\,\%). En ellas, con 2 \emph{shots}
+y en 4x4, el 2B rellena en la mediana el 44\,\% de las casillas vacías con el valor
+correcto (\emph{fill} del \emph{reward}). Por lo tanto, en este régimen de
+razonamiento largo el modelo rara vez entrega una grilla completa y errónea:
+resuelve el puzzle o no termina de escribir su razonamiento, y es el presupuesto
+de tokens el que decide cuál de los dos ocurre. Esta clasificación no distingue
+cuántas respuestas truncadas habrían llegado a una solución correcta con más
+tokens; en el piloto 2 (sección~\ref{sec:pilotos}), el 9B resolvió las tres tareas de 6x6
+probadas (una por nivel) con 8.192 tokens, aunque con tan pocas tareas es solo
+una indicación.
 
 \subsection{Ejemplo de acierto y fortaleza observada}
 Los ejemplos de esta sección se eligieron para ilustrar las categorías
-más frecuentes de la tabla~\ref{tab:errores}; no son una muestra
-aleatoria.
+de la tabla~\ref{tab:errores}; no son una muestra aleatoria.
 
-\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 \emph{easy},
-\texttt{eval-4x4-easy-00000}, respuesta 0 de 8.
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 con 4 casillas vacías, 2
+\emph{shots}, \texttt{test-4x4-n4-00000}, respuesta 0 de 16.
 
-\textbf{Problema y respuesta esperada:} 6 casillas vacías.
+\textbf{Problema y respuesta esperada:}
 \[
   \text{Puzzle: }
-  \begin{bmatrix} 0&2&3&4\\ 0&4&2&1\\ 0&0&1&0\\ 2&1&4&0 \end{bmatrix}
+  \begin{bmatrix} 0&3&2&0\\ 2&4&1&3\\ 4&2&3&1\\ 0&1&4&0 \end{bmatrix}
   \qquad
   \text{Solución: }
-  \begin{bmatrix} 1&2&3&4\\ 3&4&2&1\\ 4&3&1&2\\ 2&1&4&3 \end{bmatrix}
+  \begin{bmatrix} 1&3&2&4\\ 2&4&1&3\\ 4&2&3&1\\ 3&1&4&2 \end{bmatrix}
 \]
 
-\textbf{Respuesta del modelo y resultado del verificador:} la grilla
-generada coincide con la solución, en el formato requerido y con 63
-tokens. El verificador aprueba todas las comprobaciones: recompensa 1.
+\textbf{Respuesta del modelo y resultado del verificador:} el modelo razona por
+filas (\emph{Step 1: Analyze Row 1\ldots}), deduce las casillas faltantes a partir
+de las columnas, comprueba los cuatro bloques y termina con una grilla idéntica a
+la solución, en el formato requerido y con 605 tokens. \emph{Reward} 1.
 
-En tableros pequeños, el 2B puede completar correctamente un puzzle en
-un solo paso, sin razonamiento explícito. Sin embargo, el acierto no es
-estable: en esta misma tarea, solo 1 de sus 8 respuestas fue correcta.
-Esta variabilidad entre intentos es la que miden \passuno\ y \passk, y es
-la condición que permite que el aprendizaje reforzado tenga señal.
+Con pocas casillas vacías y ejemplos en el prompt, el 2B aplica correctamente la
+deducción por casilla única: en esta tarea acierta 15 de las 16 respuestas. El
+acierto, sin embargo, no es estable en todas las tareas: en la siguiente instancia
+(\texttt{test-4x4-n4-00001}) el 2B falla de la forma que se describe más abajo, y
+la respuesta que falla en esta misma tarea es la del segundo ejemplo de error. Esta
+variabilidad entre intentos es la que miden \passuno\ y \passk, y es la condición
+que permite que el aprendizaje reforzado tenga señal.
 
 \subsection{Ejemplos de error y debilidades observadas}
 
-\paragraph{Valor fuera de rango en una grilla casi correcta.}
-\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 \emph{easy},
-\texttt{eval-4x4-easy-00000}, respuesta 2 de 8 (misma tarea del ejemplo
-anterior).
+\paragraph{Respuesta correcta rechazada por formato.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 con 4 casillas vacías, 0
+\emph{shots}, \texttt{test-4x4-n4-00000}, respuesta 12 de 16.
 
-\textbf{Respuesta del modelo y resultado del verificador:}
-\[
-  \begin{bmatrix} 1&2&3&4\\ 3&4&2&1\\ 4&\mathbf{5}&1&2\\ 2&1&4&3 \end{bmatrix}
-\]
-Cinco de las seis casillas vacías son correctas, pero en la fila 3,
-columna 2, el modelo escribió 5, un valor imposible en un tablero de
-4x4 (el correcto es 3). Las pistas se conservan, pero fallan las
-comprobaciones de valores permitidos, filas, columnas y bloques:
-recompensa 0.
+\textbf{Respuesta del modelo y resultado del verificador:} tras 889 tokens de
+análisis, el modelo escribe la grilla correcta, pero dentro del bloque
+\texttt{<answer>} como filas de texto (\texttt{1 3 2 4}, \texttt{2 4 1 3}, \ldots)
+y no como matriz JSON. El contrato exige la matriz JSON, por lo que el verificador
+la rechaza: \emph{reward} 0.
 
-\textbf{Origen del error:} interpretación de las reglas. El modelo no
-respeta el rango de valores de un tablero de 4x4, posiblemente por la
-mayor frecuencia de Sudokus de 9x9 en sus datos de entrenamiento. El
-ejemplo muestra además el costo de la recompensa binaria: una respuesta
-con un solo error recibe lo mismo que una respuesta vacía.
+\textbf{Origen del error:} formato. El modelo resolvió la tarea, pero no respetó
+el contrato de salida. Es el fallo más frecuente del 2B sin ejemplos en 4x4 (81
+de 960 respuestas; en 69 de ellas el bloque contiene filas de texto y en 12 no
+hay bloque de respuesta) y no aparece con 2 \emph{shots} (0 de 960), cuyos
+ejemplos muestran la matriz JSON. Es el costo de exigir un contrato estricto
+(sección~\ref{sec:robustez}).
 
-\paragraph{Tablero incompleto.}
-\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 9x9 \emph{easy},
-\texttt{eval-9x9-easy-00000}, respuesta 0 de 8.
+\paragraph{Pista original alterada.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 con 4 casillas vacías, 2
+\emph{shots}, \texttt{test-4x4-n4-00000}, respuesta 8 de 16.
 
-\textbf{Problema y respuesta del modelo:} el puzzle tiene 17 casillas
-vacías. El modelo entrega una grilla con el formato correcto y sin
-alterar las pistas, en 268 tokens, pero solo 6 de las 17 casillas son
-correctas: deja 6 sin llenar (con 0) y llena 5 con valores incorrectos,
-entre ellos dos pares intercambiados en las filas 2 y 3 (por ejemplo,
-4 y 5 en las columnas 3 y 6 de la fila 2). Recompensa 0.
+\textbf{Respuesta del modelo y resultado del verificador:} el modelo completa
+las casillas paso a paso, pero en la última fila escribe $[4,1,2,3]$ en lugar
+de $[3,1,4,2]$: cambia la pista 4 de la columna 3 por un 2 y coloca valores
+erróneos en las casillas vacías. Solo la mitad de las casillas vacías coincide con la solución y 11 de
+las 12 pistas se conservan: \emph{reward} 0.
 
-\textbf{Origen del error:} razonamiento. El modelo no completa la
-deducción, aunque en este nivel todas las casillas se pueden llenar una a
-una con un único candidato. Es el patrón dominante del 2B en 9x9, nivel
-en que ninguna de sus 240 respuestas fue correcta.
+\textbf{Origen del error:} razonamiento y copia. En 4x4 con 2 \emph{shots}, 28
+respuestas del 2B alteran alguna pista; con 0 \emph{shots}, 5.
 
-\paragraph{Corrección posterior a la respuesta y truncamiento.}
-\textbf{Modelo, nivel e instancia:} Qwen3.5-9B 4 bits, 9x9 \emph{easy},
-\texttt{eval-9x9-easy-00001}, respuesta 2 de 8.
+\paragraph{Puzzle declarado ya resuelto.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 4x4 con 4 casillas vacías, 2
+\emph{shots}, \texttt{test-4x4-n4-00001}, respuesta 5 de 16.
 
-\textbf{Problema y respuesta del modelo:} el puzzle tiene 13 casillas
-vacías. El modelo cierra primero un bloque de respuesta con solo 3
-casillas correctas, 9 sin llenar y una incorrecta. Luego escribe
-``\emph{Wait, I see an error in my manual trace above. Let me re-solve
-carefully from scratch}'' y comienza a resolver fila por fila, hasta
-agotar los 1.024 tokens. El verificador rechaza la respuesta por texto
-posterior al bloque final: recompensa 0.
+\textbf{Respuesta del modelo y resultado del verificador:} el modelo verifica las
+filas y columnas, afirma que ``el puzzle ya está completamente resuelto'' y
+devuelve la grilla sin cambios, con 4 casillas en 0. El formato es correcto y las
+pistas se conservan, pero ninguna casilla vacía se completa (\emph{fill} 0):
+\emph{reward} 0.
 
-\textbf{Origen del error:} formato y razonamiento a la vez. El modelo
-responde antes de resolver y luego intenta corregirse fuera del contrato
-de salida, pese a la instrucción de revisar en silencio. Es el
-comportamiento de 242 de las 268 respuestas truncadas del 9B.
+\textbf{Origen del error:} razonamiento. El modelo no detecta que las casillas
+con 0 están vacías. Es uno de los pocos casos de grilla con el formato correcto
+y pistas intactas, la categoría menos frecuente de la tabla~\ref{tab:errores}.
+
+\paragraph{Razonamiento truncado.}
+\textbf{Modelo, nivel e instancia:} Qwen3.5-2B, 6x6 con 16 casillas vacías, 0
+\emph{shots}, \texttt{test-6x6-n16-00000}, respuesta 0 de 16.
+
+\textbf{Respuesta del modelo y resultado del verificador:} el modelo analiza fila
+por fila, intersecta conjuntos de números faltantes y vuelve a las mismas filas,
+hasta agotar los 2.304 tokens en medio de una frase, sin llegar a escribir el bloque
+\texttt{<answer>}. \emph{Reward} 0.
+
+\textbf{Origen del error:} presupuesto de tokens y razonamiento a la vez. Es el
+comportamiento de la mayoría de las respuestas de 6x6 (tabla~\ref{tab:errores}):
+el modelo deduce casilla por casilla, pero el razonamiento en lenguaje natural no
+cabe en el límite.
