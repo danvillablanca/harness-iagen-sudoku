@@ -141,6 +141,20 @@ Job array `7563963`; los 5 shards terminaron `COMPLETED` (1 h 48 min – 1 h 57 
   DPO enseñarían sobre todo "ser más corto".
 - **Sesgo a lo fácil:** de las 1775 correctas, ≈1170 son 4x4 y ≈600 son 6x6.
 
+### Ronda extra r1 (100 tareas 6x6, 800 muestras, temperatura 1.0, `--seed 1`, `--shot-seed 1`)
+
+Job array `7570605`, 5 shards, todos `COMPLETED` (1 h 5 min – 1 h 15 min). El objetivo era
+conseguir más pares DPO con rechazados de rejilla errónea.
+
+| Tablero / nivel | pass@1 | truncadas | tokens medios |
+|---|---|---|---|
+| 6x6 easy | 0.91 | 9% | 2140 |
+| 6x6 medium | 0.63 | 36% | 3166 |
+
+La temperatura 1.0 no cambió la tasa de aprobación ni la de truncamiento respecto a r0
+(0.87 / 0.64 y 10% / 34%), así que casi no hay más rejillas erróneas: r1 solo aportó 6
+rechazados de ese tipo (30 → 36 en total con cap 2).
+
 ## Construcción de los datasets
 
 `Laboratorio/Qwen3.5/build_sft_dpo.py` lee los shards, recupera el prompt de `train.jsonl`
@@ -148,19 +162,38 @@ por `task_id` (sin shots) y escribe `sft.jsonl` y `dpo.jsonl`. Rechaza muestras 
 del split `train`.
 
 ```sh
-python Laboratorio/Qwen3.5/build_sft_dpo.py --results results/traces/r0 \
-    --tasks data/sudoku/train.jsonl --out data/traces
+python Laboratorio/Qwen3.5/build_sft_dpo.py --results results/traces/r0 results/traces/r1 \
+    --tasks data/sudoku/train.jsonl --out data/traces --synthetic-per-task 1
 ```
 
 - **SFT** (`prompt`, `completion`): muestras con `reward == 1.0` y sin truncar; hasta
   `--max-sft-per-task` (2) completions distintas por tarea, las más cortas primero.
-- **DPO** (`prompt`, `chosen`, `rejected`, `rejected_truncated`): hasta
+- **DPO** (`prompt`, `chosen`, `rejected`, `rejected_truncated`, `rejected_synthetic`): hasta
   `--max-pairs-per-task` (2) pares por tarea sin repetir completions. `chosen` es la correcta
   más corta. `rejected` prefiere rejillas erróneas que terminaron (la más cercana a la
   correcta primero) y solo después truncadas.
-- **Resultado con r0:** 492 ejemplos SFT (100 por nivel, 92 en 6x6 medium) y 148 pares DPO
-  (3 / 6 / 16 en 4x4 easy / medium / hard, 47 en 6x6 easy, 76 en 6x6 medium). De los pares,
-  30 tienen un rechazado con rejilla errónea y 118 uno truncado.
+- **Pares sintéticos** (`--synthetic-per-task N`, por defecto 0): N pares extra por tarea cuyo
+  `rejected` es la propia traza correcta con **una celda originalmente vacía cambiada en la
+  rejilla del `<answer>` final** (`rejected_synthetic = true`). Es el rechazado de rejilla
+  errónea que el 9B casi no produce (sus fallos son casi todos truncamientos). Cada uno se
+  comprueba con `reward` (formato correcto y `solved = 0`) y la semilla depende de
+  `task_id`, así que el resultado es determinista. `chosen` rota entre las correctas
+  distintas, empezando por las que no usaron los pares reales de esa tarea.
+  - **Limitación:** son rechazados fuera de política. El razonamiento previo (que termina en
+    "All constraints satisfied") se deja tal cual y solo la rejilla final es incorrecta, de
+    modo que el par enseña sobre todo a copiar fielmente la última rejilla verificada. Los
+    campos `rejected_synthetic` y `rejected_truncated` permiten filtrarlos o pesarlos.
+- **Resultado con r0 y r1 juntos y 1 par sintético por tarea:** 498 ejemplos SFT (100 por
+  nivel, 98 en 6x6 medium) y **432 pares DPO**:
+
+  | | 4x4 easy | 4x4 medium | 4x4 hard | 6x6 easy | 6x6 medium | total |
+  |---|---|---|---|---|---|---|
+  | reales | 3 | 6 | 16 | 65 | 92 | 182 |
+  | sintéticos | 50 | 50 | 50 | 50 | 50 | 250 |
+
+  De los 182 pares reales, 36 tienen un rechazado con rejilla errónea y 146 uno truncado.
+  Solo con r0 y sin sintéticos eran 492 ejemplos SFT y 148 pares reales (30 con rejilla
+  errónea).
 - Los archivos quedan en `data/traces/`, ignorado por git. Hay tests en
   `test_build_sft_dpo.py`.
 
@@ -168,14 +201,13 @@ python Laboratorio/Qwen3.5/build_sft_dpo.py --results results/traces/r0 \
 
 1. **SFT** del 2B con `data/traces/sft.jsonl` (el formato de entrenamiento depende de la
    librería elegida; los campos son strings simples).
-2. **Más pares DPO** (sin GPU primero): subir `--max-pairs-per-task` a 3 da hasta 173 pares
-   con los datos actuales, pero los pares extra son casi todos con rechazado truncado.
-3. **Rechazados on-policy del 2B tras el SFT:** muestrear el 2B ya entrenado sobre las mismas
+2. **Pares DPO:** ya generados con rechazados sintéticos (ver arriba). Subir
+   `--max-pairs-per-task` a 3 da 52 pares reales más, casi todos con rechazado truncado.
+3. **Rechazados on-policy del 2B tras el SFT** (opcional, mejor calidad que los sintéticos): muestrear el 2B ya entrenado sobre las mismas
    tareas y emparejar sus fallos (sobre todo rejillas erróneas) con las trazas correctas del
    9B. Es la fuente de mejor calidad para DPO y el 2B es mucho más rápido que el 9B.
-4. **Solo si falta cobertura:** una ronda extra del 9B solo sobre las 100 tareas 6x6 con otro
-   `--seed`, otro `--shot-seed` y temperatura 1.0 (≈1 h con 5 shards), o rechazados
-   sintéticos (corromper una celda de una traza correcta; sin GPU, pero fuera de política).
+4. **Descartado:** otra ronda del 9B para más rechazados erróneos. r1 (temperatura 1.0) apenas
+   aportó 6 y el 9B falla casi siempre por truncamiento.
 5. **Evaluación:** el 2B se evalúa con `baseline.py` sobre `eval.jsonl` con los mismos
    ajustes que su baseline. Medir aparte 6x6 hard y 9x9 para ver si generaliza o retrocede
    en lo que no vio.

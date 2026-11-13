@@ -3,9 +3,15 @@
     python -m unittest discover -s Laboratorio/Qwen3.5 -p "test_*.py"
 """
 
+import random
 import unittest
+from collections import Counter
 
-from build_sft_dpo import dpo_pairs, group_by_task, sft_examples
+from build_sft_dpo import (
+    corrupt_answer, dpo_pairs, group_by_task, is_wrong_grid, sft_examples, synthetic_pairs,
+)
+from dataset import make_record
+from reward import reward
 
 
 def sample(index, reward, tokens=10, finish="stop", task="t", split="train", text=None):
@@ -73,6 +79,53 @@ class DpoTest(unittest.TestCase):
     def test_no_pair_when_all_correct_or_all_failed(self):
         self.assertEqual(dpo_pairs(group_by_task([sample(0, 1.0)]), PROMPTS, 2), [])
         self.assertEqual(dpo_pairs(group_by_task([sample(0, 0.0)]), PROMPTS, 2), [])
+
+
+class SyntheticTest(unittest.TestCase):
+    record = make_record("train", 4, "easy", 0)
+
+    def completion(self, text="Reasoning."):
+        return f"{text}\n\n<answer>{self.record['solution']}</answer>".replace("'", "")
+
+    def test_corrupts_one_blank_cell_and_breaks_the_solution(self):
+        good = self.completion()
+        self.assertEqual(reward(self.record["prompt"], good), 1.0)
+        bad = corrupt_answer(good, self.record["puzzle"], random.Random(0))
+        self.assertTrue(bad.startswith("Reasoning."))
+        self.assertTrue(is_wrong_grid(self.record["prompt"], bad))
+        old = eval(good.split("<answer>")[1].split("</answer>")[0])
+        new = eval(bad.split("<answer>")[1].split("</answer>")[0])
+        changed = [(r, c) for r in range(4) for c in range(4) if old[r][c] != new[r][c]]
+        self.assertEqual(len(changed), 1)
+        r, c = changed[0]
+        self.assertEqual(self.record["puzzle"][r][c], 0)
+
+    def test_is_deterministic_and_needs_an_answer(self):
+        good = self.completion()
+        puzzle = self.record["puzzle"]
+        self.assertEqual(corrupt_answer(good, puzzle, random.Random(1)),
+                         corrupt_answer(good, puzzle, random.Random(1)))
+        self.assertIsNone(corrupt_answer("no answer here", puzzle, random.Random(0)))
+        self.assertIsNone(corrupt_answer("<answer>nope</answer>", puzzle, random.Random(0)))
+
+    def test_synthetic_pairs_rotate_chosen_and_are_marked(self):
+        task = self.record["id"]
+        groups = group_by_task([
+            sample(0, 1.0, tokens=5, task=task, text=self.completion("short")),
+            sample(1, 1.0, tokens=9, task=task, text=self.completion("longer")),
+        ])
+        prompts = {task: self.record["prompt"]}
+        puzzles = {task: self.record["puzzle"]}
+        pairs = synthetic_pairs(groups, prompts, puzzles, 2, Counter({task: 1}))
+        self.assertEqual(len(pairs), 2)
+        self.assertEqual([p["chosen"].split("\n")[0] for p in pairs], ["longer", "short"])
+        self.assertTrue(all(p["rejected_synthetic"] and not p["rejected_truncated"]
+                            for p in pairs))
+        self.assertNotEqual(pairs[0]["chosen"], pairs[0]["rejected"])
+
+    def test_no_synthetic_pairs_without_correct_samples(self):
+        groups = group_by_task([sample(0, 0.0, task=self.record["id"])])
+        self.assertEqual(synthetic_pairs(groups, {}, {}, 2), [])
 
 
 if __name__ == "__main__":
