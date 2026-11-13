@@ -1,7 +1,8 @@
 \section{Generación de \emph{traces} para entrenamiento}
 \label{sec:traces}
 
-Para el entrenamiento posterior del modelo objetivo (Qwen3.5-2B) se generaron
+Para el entrenamiento posterior del modelo objetivo (Qwen3.5-2B), con SFT
+\citep{chu2025sft} y DPO \citep{rafailov2023dpo}, se generaron
 \emph{traces} con Qwen3.5-9B como \emph{teacher} sobre la partición de
 entrenamiento. Esta sección describe cómo se generaron y qué datos resultaron;
 el entrenamiento mismo no se ha ejecutado. Los datos se publican con el
@@ -49,12 +50,11 @@ resultado es indicativo. Los \emph{shots} se usan solo para generar: el
 \texttt{train.jsonl}, sin ejemplos, que es el que el 2B recibe en la evaluación.
 Así el 2B aprende el estilo de los ejemplos sin necesitarlos en contexto.
 
-\paragraph{Ejecución.} Cada ronda se repartió en 5 \emph{shards} (un trabajo de
-Slurm por \emph{shard}, una GPU L40S cada uno), y todos reciben las mismas 10
-tareas por (tamaño, nivel). La corrida r0 tardó entre 1 h 48 min y 1 h 57 min por
-\emph{shard}. Una segunda ronda (r1) con temperatura 1,0 y otra semilla se ejecutó
-solo sobre las 100 tareas de 6x6 (800 muestras, 1 h 5 min a 1 h 15 min por
-\emph{shard}) para conseguir más rechazados con rejilla errónea.
+\paragraph{Ejecución.} Cada ronda se repartió en 5 \emph{shards} que se ejecutaron
+en paralelo, cada uno en una GPU NVIDIA L40S, y todos reciben las mismas 10 tareas
+por (tamaño, nivel). Una segunda ronda (r1) con temperatura 1,0 y otra semilla se
+ejecutó solo sobre las 100 tareas de 6x6 (800 muestras) para conseguir más
+rechazados con rejilla errónea.
 
 \subsection{Resultados de la generación}
 \label{sec:traces-resultados}
@@ -140,9 +140,12 @@ errónea).
 Los datos están sesgados a lo fácil y el 86\,\% de los fallos del 9B son
 truncamientos, no errores de razonamiento. Los pares sintéticos no son
 \emph{on-policy}. Un paso opcional es muestrear el 2B tras el SFT y emparejar sus
-fallos con las trazas correctas del 9B. Además, ningún \emph{prompt} de
-\texttt{train.jsonl} debería aparecer en \texttt{eval.jsonl} ni en
-\texttt{test.jsonl}: las semillas impiden compartir puzzles, pero esto debe
-verificarse. Las cifras de esta sección provienen de los registros de la
+fallos con las trazas correctas del 9B. Además, se verificó que ningún \emph{prompt} ni puzzle de \texttt{train.jsonl}
+aparece en \texttt{eval.jsonl} ni en \texttt{test.jsonl} (tampoco entre estos
+dos). Sí se repiten algunas grillas completas entre particiones (13 entre
+entrenamiento y validación, 25 entre entrenamiento y prueba y 7 entre
+validación y prueba), todas de 4x4, que solo tiene 288 grillas completas
+posibles; lo que se evalúa no son esas grillas sino los puzzles, que son
+distintos. Las cifras de esta sección provienen de los registros de la
 generación y no de las evaluaciones de las secciones anteriores, que usan la
 partición de prueba.

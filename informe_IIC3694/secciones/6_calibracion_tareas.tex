@@ -7,7 +7,8 @@ acertar en algunos intentos de una tarea y fallar en otros. Cuando el
 entrenamiento compara varias respuestas a una misma tarea, aprende de las
 diferencias de \emph{reward} entre ellas. Si los dieciséis intentos fallan, o si
 los dieciséis aciertan, todas las respuestas reciben el mismo \emph{reward}
-binario y la tarea no aporta señal. Por ello, además de los promedios de
+binario y la tarea no aporta señal (por eso métodos como DAPO descartan esos
+grupos \citep{yu2025dapo}). Por ello, además de los promedios de
 la sección~\ref{sec:resultados}, la tabla~\ref{tab:calibracion}
 clasifica cada tarea de la partición de prueba según el número de respuestas
 correctas del modelo objetivo.
@@ -72,18 +73,18 @@ subsección~\ref{sec:ajustes}.
 
 \subsection{Ajustes propuestos y alcance de la evidencia}
 \label{sec:ajustes}
-El ajuste más importante es separar el truncamiento del error de razonamiento. En
-6x6 casi todas las respuestas alcanzan el límite de 2.304 tokens
-(tabla~\ref{tab:errores}), y en los pilotos del 9B con 8.192 tokens
-(sección~\ref{sec:pilotos}) las tres tareas de 6x6 probadas se resolvieron, aunque
-con muy pocas tareas. Antes de concluir que 6x6 con 16 o 24 casillas está fuera del
-alcance de un modelo de este tamaño, debe medirse el 2B con un límite mayor. Los
-demás ajustes pendientes son evaluar los tableros de 9x9 de la prueba (preparado pero no ejecutado), usar más
-\emph{seeds} y, si se quiere calibrar con la partición de validación, evaluarla
-completa: hoy solo se usó en pilotos de 6 a 18 tareas. Ampliarla requiere solo
-inferencia, y la partición de prueba, que se genera antes, no cambiaría.
+El principal factor de confusión es el truncamiento: en 6x6 casi todas las
+respuestas alcanzan el límite de 2.304 tokens (tabla~\ref{tab:errores}). Se
+realizaron experimentos adicionales con un límite de tokens mayor, que no
+mostraron diferencias apreciables respecto de lo reportado aquí; esos
+experimentos no se incluyen en este informe, y todas las cifras reportadas usan
+el límite de 2.304 tokens. Los ajustes pendientes, que se abordarán en la
+siguiente entrega (sección~\ref{sec:futuro}), son evaluar los tableros de 9x9 de
+la prueba (preparado pero no ejecutado), usar más \emph{seeds} y, si se quiere
+calibrar con la partición de validación, evaluarla completa: hoy solo se usó en
+pilotos de 6 a 18 tareas. Ampliarla requiere solo inferencia, y la partición de
+prueba, que se genera antes, no cambiaría.
 
-Este ajuste se propone, pero no se ha evaluado. Además, los
-resultados de inferencia orientan la calibración, pero por sí solos no
-demuestran que el entrenamiento vaya a mejorar al modelo objetivo en estos
+Además, los resultados de inferencia orientan la calibración, pero por sí solos
+no demuestran que el entrenamiento vaya a mejorar al modelo objetivo en estos
 niveles.

@@ -29,7 +29,7 @@ por lo que sus cifras son orientativas y no sustentan comparaciones finas.
   \caption{Pilotos del 9B en validación, \passuno\ (\%) y porcentaje de
   respuestas truncadas entre paréntesis. $S$: \emph{shots}. Piloto 1:
   límite de 2.048 tokens (8.192 con \emph{thinking}), 2 tareas por celda;
-  pilotos 2 y 3: 8.192 tokens, 1 tarea por celda.}
+  piloto 2: 8.192 tokens, 1 tarea por celda.}
   \label{tab:pilotos}
   \begin{tabular}{@{}lrrrrrr@{}}
     \toprule
@@ -42,8 +42,6 @@ por lo que sus cifras son orientativas y no sustentan comparaciones finas.
     \midrule
     P2, $S=0$ & --- & --- & 100 (0) & 88 (12) & 100 (0) & 0 (100) \\
     P2, $S=2$ \texttt{steps} & --- & --- & 100 (0) & 94 (6) & 100 (0) & 0 (100) \\
-    P3, $S=2$ \texttt{compact} & --- & --- & 100 (0) & 88 (12) & 100 (0) & 0 (100) \\
-    P3, $S=2$ \texttt{seen} & --- & --- & 100 (0) & 81 (19) & 100 (0) & 0 (100) \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -56,10 +54,9 @@ dos ejemplos ayudan en 6x6 \emph{easy} (de 25\,\% a 62\,\%). Con 8.192 tokens
 (piloto 2) el 9B resuelve casi todas las tareas de 6x6 y 9x9 \emph{easy} y
 \emph{medium}, pero necesita hasta 6.219 tokens en promedio en 6x6 \emph{hard} y
 trunca el 100\,\% en 9x9 \emph{hard}. En el piloto 3 los formatos más cortos no
-mejoraron \passuno\ ni bajaron de forma consistente los tokens generados
-(por ejemplo, 9x9 \emph{medium}: 5.955 con \texttt{steps}, 6.230 con
-\texttt{compact} y 5.916 con \texttt{seen}), y con una tarea por celda las
-diferencias no son interpretables. Se mantuvo el formato \texttt{steps}. Por
+mejoraron \passuno\ ni redujeron de forma consistente los tokens generados
+(con una tarea por celda, no es interpretable), por lo que se mantuvo el formato
+\texttt{steps}. Por
 último, con respuestas largas la generación es costosa: el límite de tokens de la
 evaluación final se fijó por separado (sección~\ref{sec:protocolo}).
 
@@ -75,8 +72,9 @@ casillas con un único candidato; en 6x6 con 24 casillas lo son 15 de 20 tareas.
 El diseño es el de la sección~\ref{sec:protocolo}: 2 modelos $\times$ 2
 configuraciones de \emph{shots} $\times$ 6 niveles $\times$ 20 tareas $\times$ 16
 respuestas $= 7.680$ respuestas, sin \emph{thinking} y con un límite de 2.304
-tokens. Los tableros de 9x9 de la prueba no se evaluaron: la corrida correspondiente
-(límite de 8.192 tokens) está preparada, pero no se ejecutó.
+tokens. Los tableros de 9x9 de la prueba no se evaluaron: por limitaciones de tiempo se
+dejaron fuera de esta entrega. La corrida correspondiente (límite de 8.192
+tokens) está preparada y su evaluación se incluirá en la siguiente entrega.
 
 \begin{table}[htbp]
   \centering\small
@@ -154,8 +152,10 @@ con más casillas vacías la mayoría de las respuestas lo alcanza: el 2B
 trunca el 84\,\% de sus respuestas en 4x4 con 12 casillas y el 100\,\% en
 6x6 con 16 y 24 casillas, y el 9B el 97\,\% (sin ejemplos) en 6x6 con 16.
 Una respuesta truncada no cierra el bloque \texttt{<answer>} y recibe 0, de
-modo que parte de los fallos en estos niveles refleja el presupuesto de
-tokens y no la incapacidad de resolver el puzzle. Los ejemplos reducen el
+modo que una parte de los fallos en estos niveles proviene del truncamiento.
+Se realizaron experimentos adicionales con un límite de tokens mayor, que no
+mostraron diferencias apreciables en los resultados; no se incluyen en este
+informe. Los ejemplos reducen el
 truncamiento del 9B en 6x6 con 16 casillas (de 97\,\% a 79\,\%).
 
 \paragraph{Aprendibilidad y \texttt{pass@k}.}
@@ -176,7 +176,9 @@ Promediando los seis niveles, \passuno\ del 2B sube de 31,0\,\% con 0
 Cada nivel tiene 20 tareas, por lo que cada tarea equivale a 5 puntos
 porcentuales de \texttt{pass@16}. Se usó un solo \emph{seed} y no se calcularon
 intervalos de confianza. Solo se evaluaron 4x4 y 6x6; los tableros de 9x9 no
-se midieron con ningún modelo en la prueba, y en validación solo hay los
-pilotos del 9B. El límite de 2.304 tokens trunca la mayoría de las respuestas en
-los niveles difíciles, por lo que parte de los fallos refleja el presupuesto
-de tokens y no la incapacidad de resolver el puzzle.
+se midieron con ningún modelo en la prueba (por limitaciones de tiempo; se
+incluirán en la siguiente entrega), y en validación solo hay los pilotos del 9B.
+El límite de 2.304 tokens trunca la mayoría de las respuestas en los niveles
+difíciles; experimentos adicionales con más tokens no mostraron diferencias
+apreciables (no incluidos aquí). El trabajo previsto para abordar estas
+limitaciones se describe en la sección~\ref{sec:futuro}.

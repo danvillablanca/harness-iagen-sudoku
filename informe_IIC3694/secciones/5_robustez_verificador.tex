@@ -33,7 +33,7 @@ Este informe usa solo el criterio binario (\emph{reward} igual a 1), que es el
 que determina \texttt{pass@}$k$; el crédito parcial no se usa en las métricas.
 
 \subsection{Pruebas automatizadas y auditoría}
-El harness incluye 71 pruebas unitarias, que
+El harness incluye 75 pruebas unitarias, que
 se ejecutaron sin fallos y no requieren cargar un modelo. De ellas, 19 están en
 \texttt{test\_reward.py} y cubren el verificador; la tabla~\ref{tab:robustez} las
 agrupa por categoría. Las demás cubren el generador de tareas, el cálculo de
@@ -91,6 +91,29 @@ valores registrados, no la ausencia de errores del verificador. Por último, las
 450, 90 y 180 tareas de las particiones tienen solución única, lo que hace exacto el cálculo de
 \emph{relleno}.
 
+\subsection{Pruebas adversariales previstas}
+Como el verificador es además la recompensa del entrenamiento, un verificador
+imperfecto puede ser explotado por la política (\emph{reward hacking})
+\citep{skalse2022reward}, y en otros dominios se ha visto que una parte de los
+aciertos aparentes no es genuina \citep{aleithan2024swebenchplus}. Las pruebas
+actuales cubren el comportamiento esperado del \emph{reward}, pero todavía no
+incluyen casos diseñados específicamente para engañar al verificador. Para la
+siguiente entrega se agregarán pruebas para:
+\begin{itemize}
+  \item respuestas dentro de \texttt{<think>}, delimitadores sin cerrar, y
+  etiquetas en mayúsculas o anidadas;
+  \item tipos JSON no enteros (\texttt{true}, \texttt{8.0}, \texttt{"8"},
+  \texttt{null}) y valores fuera de rango;
+  \item respuestas extremadamente largas;
+  \item un renombrado completo de los dígitos (por ejemplo, sumar 1 a cada
+  valor), que respeta filas, columnas y bloques;
+  \item tableros de 6x6 y 9x9, con bloques no cuadrados;
+  \item intentos de maximizar el crédito parcial (\emph{relleno} y \emph{pistas})
+  sin resolver el puzzle.
+\end{itemize}
+Los resultados se reportarán como una tabla de intentos de engaño con el
+resultado esperado y el obtenido.
+
 \subsection{Vulnerabilidades y limitaciones}
 Entre los casos probados, el verificador no aceptó ninguna respuesta incorrecta
 (falsos positivos) ni rechazó ninguna solución válida que cumpliera el formato
@@ -103,7 +126,9 @@ ejemplo, sin etiquetas, con la grilla escrita como filas de texto o con texto
 posterior. En la evaluación esto ocurrió: en 69 respuestas del 2B sin ejemplos,
 en 4x4, el bloque de respuesta contenía filas de texto y no una matriz JSON
 (sección~\ref{sec:cualitativo}). Esta política evita ambigüedades sobre cuál es
-la respuesta final, a costa de penalizar errores de formato. Las respuestas
+la respuesta final, a costa de penalizar errores de formato. Como trabajo futuro
+(sección~\ref{sec:futuro}) se medirá cuánto cambiaría \passuno\ con un parser
+tolerante, para cuantificar el costo de esta decisión. Las respuestas
 truncadas, que no cierran el bloque, reciben 0.
 
 Otras limitaciones del verificador actual:

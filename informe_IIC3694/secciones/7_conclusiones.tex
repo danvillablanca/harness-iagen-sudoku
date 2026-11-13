@@ -14,14 +14,15 @@ Dos \emph{shots} mejoran el 2B (de 31,0\,\% a 39,5\,\% de \passuno\ promedio) y
 reducen los tokens generados en los niveles fáciles, pero no abren los niveles sin
 aciertos. El fallo dominante en toda la evaluación es el truncamiento: el 50,1\,\%
 de las 7.680 respuestas alcanzó el límite de 2.304 tokens, y casi todas las
-respuestas de 6x6 con 16 o 24 casillas (sección~\ref{sec:cualitativo}). Parte de
-los fallos refleja el presupuesto de tokens y no la capacidad.
+respuestas de 6x6 con 16 o 24 casillas (sección~\ref{sec:cualitativo}). Experimentos
+adicionales con un límite de tokens mayor no mostraron diferencias apreciables.
 
 \paragraph{Robustez del verificador.}
 El verificador acepta cualquier solución válida que conserve las pistas y
 rechaza los casos probados, y los 7.680 \emph{rewards} registrados coinciden con
 los recalculados (sección~\ref{sec:robustez}). Las reglas del parser sobre el
-razonamiento delimitado no tienen pruebas propias.
+razonamiento delimitado no tienen pruebas propias; se agregarán pruebas
+adversariales en la siguiente entrega.
 
 \paragraph{Calibración del entorno.}
 Para el 2B, la zona con señal de aprendizaje son 4x4 con 8 y 12 casillas y 6x6 con
@@ -31,13 +32,39 @@ aciertos para el 2B sin ejemplos (sección~\ref{sec:calibracion}).
 
 \paragraph{Limitaciones.}
 Se usó un solo \emph{seed}, sin intervalos de confianza, con 20 tareas por nivel.
-Los tableros de 9x9 de la partición de prueba no se evaluaron, y la partición de
+Los tableros de 9x9 de la partición de prueba no se evaluaron por limitaciones de
+tiempo, y la partición de
 validación solo se usó en pilotos del 9B con muy pocas tareas, por lo que no hay
 una línea base sobre ella. El límite de 2.304 tokens trunca la mayoría de las
 respuestas en los niveles difíciles. Las \emph{traces} de entrenamiento
 (sección~\ref{sec:traces}) se generaron, pero no se entrenó con ellas.
 
-\paragraph{Cambios prioritarios antes del entrenamiento.}
-Evaluar el 2B con un límite de tokens mayor en 6x6 para separar el truncamiento
-del error de razonamiento, ejecutar los tableros de 9x9 de la prueba, repetir con
-más \emph{seeds} y entrenar al 2B con las \emph{traces} ya generadas (SFT y DPO).
+
+\section{Trabajo futuro}
+\label{sec:futuro}
+
+Para la siguiente entrega se plantea:
+\begin{itemize}
+  \item \textbf{Modelo adicional.} Agregar a la línea base al menos un modelo
+  abierto de otra familia (Llama, OLMo, Mistral u otra), además de Qwen3.5-2B y
+  Qwen3.5-9B.
+  \item \textbf{Tableros de 9x9.} Evaluar la partición de prueba de 9x9, que por
+  tiempo quedó fuera de esta entrega, y completar la medición por nivel de
+  dificultad en todos los tamaños. Medir también al 2B en la partición de
+  validación completa, ya que el aprendizaje reforzado se aplicaría sobre
+  entrenamiento y hoy la calibración se midió solo en la prueba.
+  \item \textbf{Robustez del verificador.} Incorporar las pruebas adversariales
+  de la sección~\ref{sec:robustez}, incluido el análisis del crédito parcial, y
+  una tabla de intentos de engaño. Cuantificar además la sensibilidad de
+  \passuno\ a un parser tolerante que acepte representaciones equivalentes de la
+  grilla (por ejemplo, filas en texto plano), hoy rechazadas por diseño.
+  \item \textbf{Incertidumbre.} Repetir la evaluación con más \emph{seeds} y
+  calcular intervalos de confianza (por ejemplo, \emph{bootstrap} sobre tareas),
+  de modo que diferencias pequeñas, como 86\,\% frente a 82\,\% en 6x6 con 8
+  casillas, puedan evaluarse.
+  \item \textbf{Análisis cualitativo.} Agregar ejemplos de acierto en 6x6, del
+  9B y de intentos de engaño al verificador.
+  \item \textbf{Entrenamiento.} Entrenar al 2B con las \emph{traces} ya generadas
+  (SFT y DPO) y evaluar con los mismos ajustes de esta línea base, junto con el
+  muestreo del 2B tras el SFT para obtener rechazados \emph{on-policy}.
+\end{itemize}

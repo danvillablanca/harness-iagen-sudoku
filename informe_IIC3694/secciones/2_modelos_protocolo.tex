@@ -8,7 +8,11 @@ evaluó Qwen3.5-9B, de la misma familia, por lo que comparte plantilla de chat y
 tokenizador con el modelo objetivo. Ambos se usaron con los pesos originales,
 sin cuantizar. El 9B es además el modelo previsto como \emph{teacher} para
 generar \emph{traces} de entrenamiento; en este informe
-solo se usa como modelo de comparación y en los pilotos.
+solo se usa como modelo de comparación y en los pilotos. La línea base se limita
+por ahora a estos dos modelos de la misma familia; para la siguiente entrega se
+agregará un modelo adicional, de preferencia de otra familia abierta
+(por ejemplo Llama, OLMo o Mistral), para ampliar la comparación que pide el
+enunciado.
 
 \begin{table}[htbp]
   \centering\small
@@ -55,16 +59,9 @@ indique otra cosa, la configuración descrita es la de la prueba.
   partir del formato de los ejemplos y no de resultados de los modelos); los
   pilotos usaron 2.048, 8.192 u otros límites según el caso. El límite de
   entrada es de 2.048 tokens sin \emph{shots} y de 16.384 con ellos.
-  \item[Entorno de ejecución:] nodo \texttt{barto} del \emph{cluster}:
-  procesador AMD Ryzen Threadripper 7970X (32 núcleos, 64 hilos), 125\,GB de
-  RAM y dos GPU NVIDIA RTX A6000 de 48\,GB. Cada trabajo se lanzó con Slurm con
-  una sola GPU, 8 CPU y 60\,GB de RAM. El sistema es Ubuntu~24.04.4 (núcleo
-  6.8.0), con Python~3.13.13, PyTorch~2.13.0 (CUDA~12.9) y
-  Transformers~5.18.0. Los pesos se cargaron en \texttt{bfloat16}, sin
-  cuantizar. Las variantes rápidas de las capas lineales de Qwen3.5
-  (\texttt{causal\_conv1d} y \texttt{flash-linear-attention}) no estaban
-  instaladas, por lo que Transformers usó su implementación de referencia, más
-  lenta pero equivalente.
+  \item[Entorno de ejecución:] una GPU NVIDIA RTX A6000 de 48\,GB por trabajo,
+  con los pesos en \texttt{bfloat16} sin cuantizar, PyTorch~2.13.0 (CUDA~12.9)
+  y Transformers~5.18.0.
   \item[Verificación:] la función
   \texttt{reward(prompt, completion) -> float} del harness. Su valor es
   $\text{formato} \times (0{,}5\,\text{relleno} \times \text{pistas} +
@@ -102,6 +99,9 @@ insesgado de \citet{chen2021codex}:
 El valor se promedia sobre las tareas de cada nivel. \passuno\ es la tasa de
 éxito esperada con muestreo, no la de decodificación determinista, y
 \texttt{pass@16} equivale a la fracción de tareas con al menos un acierto.
-Las 16 respuestas de una tarea no se tratan como tareas independientes. Se
+Se reporta \passk\ hasta $k = 16$ y no solo \passuno\ porque, con $k$ grande, indica
+qué tareas el modelo ya puede resolver, que es la referencia para distinguir si
+el entrenamiento por refuerzo amplía o solo afina sus capacidades
+\citep{yue2025limit}. Las 16 respuestas de una tarea no se tratan como tareas independientes. Se
 reporta además la proporción de respuestas que alcanzaron el límite de tokens y
 el promedio de tokens generados. Todas las métricas se expresan en porcentaje.

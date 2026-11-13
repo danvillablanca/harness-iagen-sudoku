@@ -45,10 +45,11 @@ pero incorrectas son raras (31 respuestas, el 0,4\,\%). En ellas, con 2 \emph{sh
 y en 4x4, el 2B rellena en la mediana el 44\,\% de las casillas vacías con el valor
 correcto (\emph{fill} del \emph{reward}). Por lo tanto, en este régimen de
 razonamiento largo el modelo rara vez entrega una grilla completa y errónea:
-resuelve el puzzle o no termina de escribir su razonamiento, y es el presupuesto
-de tokens el que decide cuál de los dos ocurre. Esta clasificación no distingue
-cuántas respuestas truncadas habrían llegado a una solución correcta con más
-tokens; en el piloto 2 (sección~\ref{sec:pilotos}), el 9B resolvió las tres tareas de 6x6
+resuelve el puzzle o no termina de escribir su razonamiento, y el truncamiento
+decide cuál de los dos ocurre. Esta clasificación no distingue cuántas respuestas
+truncadas habrían llegado a una solución correcta con más tokens. Experimentos
+adicionales con un límite mayor no mostraron diferencias apreciables (no se
+incluyen en este informe). Por otra parte, en el piloto 2 (sección~\ref{sec:pilotos}), el 9B resolvió las tres tareas de 6x6
 probadas (una por nivel) con 8.192 tokens, aunque con tan pocas tareas es solo
 una indicación.
 

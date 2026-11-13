@@ -9,7 +9,12 @@ El problema elegido es resolver Sudokus de tamaño $N \times N$: completar
 una grilla de modo que cada fila, columna y bloque contenga los números
 de 1 a $N$ exactamente una vez, sin modificar las pistas originales. Es
 un problema de razonamiento con restricciones, de varios pasos, cuya
-respuesta se puede verificar con código sin ambigüedad. No requiere
+respuesta se puede verificar con código sin ambigüedad. A diferencia de
+Sudoku-Bench \citep{seely2025sudokubench}, que reúne variantes difíciles para
+evaluar modelos de frontera, aquí se usan Sudokus clásicos de tamaño y
+dificultad controlados, pensados como entorno de entrenamiento, en la línea de
+los entornos verificables de Reasoning Gym \citep{stojanovski2025reasoninggym} y
+AgentGym \citep{xi2025agentgym}. No requiere
 conocimiento externo ni herramientas, y su dificultad se puede controlar
 con el tamaño del tablero y la cantidad de casillas vacías. El modelo
 objetivo es Qwen3.5-2B, que resuelve con dificultad esta tarea.
@@ -19,8 +24,7 @@ resuelve el modelo objetivo en cada tamaño de tablero y cantidad de casillas
 vacías, cómo se compara con un modelo mayor de la misma familia, qué efecto
 tienen dos ejemplos resueltos en el prompt (\emph{few-shot}) y si las tareas
 caen en una zona aprendible: niveles en que el modelo acierta en algunos
-intentos y falla en otros, condición necesaria para que el aprendizaje
-reforzado con \emph{rewards} verificables tenga señal. No se entrenaron pesos
+intentos y falla en otros, condición necesaria para que el aprendizaje reforzado con \emph{rewards} verificables \citep{lambert2024tulu3,deepseekr1} tenga señal. No se entrenaron pesos
 en esta etapa.
 
 El harness define el formato del prompt, el parser de la respuesta y el
@@ -56,7 +60,8 @@ combinación de tamaño y nivel, para fijar el protocolo (modo \emph{thinking},
 completa con ningún modelo. La prueba (180 tareas) es la evaluación principal
 (sección~\ref{sec:prueba}): se ejecutó una vez para los tableros de 4x4 y
 6x6 (120 tareas) y no se usó para ajustar las tareas ni el protocolo. Los
-tableros de 9x9 de la prueba (60 tareas) no se han evaluado. La grilla de
+tableros de 9x9 de la prueba (60 tareas) no se han evaluado: por limitaciones de
+tiempo se dejaron fuera de esta entrega y se incluirán en la siguiente. La grilla de
 casillas vacías de la prueba se fijó al generar el dataset.
 
 \begin{table}[htbp]
