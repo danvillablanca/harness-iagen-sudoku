@@ -54,12 +54,28 @@ def pass_at_k(n: int, c: int, k: int) -> float:
     return 1.0 - comb(n - c, k) / comb(n, k)
 
 
-def select_tasks(records, per_level=None, sizes=None):
-    """First `per_level` tasks of each (size, level), in file order."""
+def parse_skip(values):
+    """`["6:hard", ...]` -> {(6, "hard"), ...}."""
+    skipped = set()
+    for value in values or ():
+        size, _, level = value.partition(":")
+        if not size.isdigit() or not level:
+            raise ValueError(f"--skip expects SIZE:LEVEL (e.g. 6:hard), got {value!r}.")
+        skipped.add((int(size), level))
+    return skipped
+
+
+def select_tasks(records, per_level=None, sizes=None, skip=()):
+    """First `per_level` tasks of each (size, level), in file order.
+
+    `skip` is a collection of (size, level) pairs to leave out.
+    """
     taken = defaultdict(int)
     selected = []
     for record in records:
         if sizes and record["size"] not in sizes:
+            continue
+        if (record["size"], record["level"]) in skip:
             continue
         key = (record["size"], record["level"])
         if per_level is None or taken[key] < per_level:
@@ -133,7 +149,8 @@ def run(args):
         "shot_seed": args.shot_seed,
         "shot_format": args.shot_format,
     }
-    tasks = select_tasks(load(args.tasks), args.per_level, args.sizes)
+    tasks = select_tasks(load(args.tasks), args.per_level, args.sizes,
+                         parse_skip(getattr(args, "skip", None)))
     path = output_path(args.out, args.model_id, args.thinking, args.shots,
                        args.shot_format)
     work = pending(tasks, load_samples(path), settings)
@@ -302,6 +319,8 @@ def parse_args():
     run_parser.add_argument("--per-level", type=int, default=None,
                             help="tasks per size and level (default: all)")
     run_parser.add_argument("--sizes", type=int, nargs="+", default=None)
+    run_parser.add_argument("--skip", nargs="+", default=None, metavar="SIZE:LEVEL",
+                            help="leave out these (size, level) pairs, e.g. 6:hard")
     run_parser.add_argument("--seed", type=int, default=0)
     run_parser.add_argument("--out", default="results", help="output directory")
 
@@ -315,6 +334,11 @@ def parse_args():
         parser.error("--n and --batch-size must be positive.")
     if args.command == "run" and args.shots < 0:
         parser.error("--shots must be >= 0.")
+    if args.command == "run":
+        try:
+            parse_skip(args.skip)
+        except ValueError as error:
+            parser.error(str(error))
     return args
 
 

@@ -13,7 +13,8 @@ from types import SimpleNamespace
 from unittest import mock
 
 from baseline import (
-    RUN_KEYS, format_table, output_path, pass_at_k, pending, run, select_tasks, summarize,
+    RUN_KEYS, format_table, output_path, parse_skip, pass_at_k, pending, run, select_tasks,
+    summarize,
 )
 from config import ModelConfig
 from dataset import make_record
@@ -59,6 +60,16 @@ class SelectionTest(unittest.TestCase):
 
     def test_all_by_default(self):
         self.assertEqual(select_tasks(self.records), self.records)
+
+    def test_skip_leaves_out_size_level_pairs(self):
+        chosen = select_tasks(self.records, skip=parse_skip(["4:hard", "9:easy"]))
+        self.assertEqual([r["id"] for r in chosen], ["t0", "t1", "t2"])
+
+    def test_parse_skip_rejects_malformed_values(self):
+        for value in ("hard", "6:", ":hard", "x:hard"):
+            with self.subTest(value):
+                with self.assertRaises(ValueError):
+                    parse_skip([value])
 
 
 class ResumeTest(unittest.TestCase):
@@ -182,7 +193,7 @@ class RunTest(unittest.TestCase):
         values = dict(tasks=str(self.tasks), model_id="Qwen/Qwen3.5-2B", backend="cpu",
                       thinking=False, n=2, batch_size=2, max_output_tokens=64,
                       max_prompt_tokens=None, temperature=None, top_p=None,
-                      per_level=None, sizes=None, seed=0, out=self.tmp.name,
+                      per_level=None, sizes=None, skip=None, seed=0, out=self.tmp.name,
                       shots=0, shot_seed=0, shot_format="steps")
         return SimpleNamespace(**{**values, **overrides})
 
