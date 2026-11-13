@@ -34,11 +34,10 @@ Se usó un solo \emph{seed}, sin intervalos de confianza, con 20 tareas por nive
 Los tableros de 9x9 de la partición de prueba no se evaluaron, y la partición de
 validación solo se usó en pilotos del 9B con muy pocas tareas, por lo que no hay
 una línea base sobre ella. El límite de 2.304 tokens trunca la mayoría de las
-respuestas en los niveles difíciles. No se generaron \emph{traces} de
-entrenamiento.
+respuestas en los niveles difíciles. Las \emph{traces} de entrenamiento
+(sección~\ref{sec:traces}) se generaron, pero no se entrenó con ellas.
 
 \paragraph{Cambios prioritarios antes del entrenamiento.}
 Evaluar el 2B con un límite de tokens mayor en 6x6 para separar el truncamiento
 del error de razonamiento, ejecutar los tableros de 9x9 de la prueba, repetir con
-más \emph{seeds} y, solo después, generar las \emph{traces} del \emph{teacher} sobre
-la partición de entrenamiento.
+más \emph{seeds} y entrenar al 2B con las \emph{traces} ya generadas (SFT y DPO).

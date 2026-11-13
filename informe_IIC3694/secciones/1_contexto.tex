@@ -26,10 +26,9 @@ en esta etapa.
 El harness define el formato del prompt, el parser de la respuesta y el
 verificador, expuesto mediante la interfaz común
 \texttt{reward(prompt, completion) -> float}. El repositorio incluye además el
-plan y el código para generar \emph{traces} SFT y pares DPO con Qwen3.5-9B como
-\emph{teacher} sobre la partición de entrenamiento, pero esa generación no se ha
-ejecutado: este
-informe no usa ni reporta datos derivados. El código y el dataset se describen en
+código y los datos de \emph{traces} SFT y pares DPO generados con Qwen3.5-9B como
+\emph{teacher} sobre la partición de entrenamiento (sección~\ref{sec:traces}).
+Las evaluaciones de las demás secciones no usan esos datos. El código y el dataset se describen en
 sus entregables respectivos; aquí se resume solo lo necesario para
 interpretar los resultados.
 

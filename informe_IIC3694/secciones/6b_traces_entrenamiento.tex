@@ -1,0 +1,148 @@
+\section{Generación de \emph{traces} para entrenamiento}
+\label{sec:traces}
+
+Para el entrenamiento posterior del modelo objetivo (Qwen3.5-2B) se generaron
+\emph{traces} con Qwen3.5-9B como \emph{teacher} sobre la partición de
+entrenamiento. Esta sección describe cómo se generaron y qué datos resultaron;
+el entrenamiento mismo no se ha ejecutado. Los datos se publican con el
+repositorio en \texttt{data/sudoku/} (particiones \texttt{train}, \texttt{eval} y
+\texttt{test}) y \texttt{data/traces/} (\texttt{sft.jsonl} y \texttt{dpo.jsonl}).
+
+\subsection{Configuración de la generación}
+\label{sec:traces-config}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Configuración de la generación de \emph{traces}.}
+  \label{tab:traces-config}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    Parámetro & Valor \\
+    \midrule
+    Modelo \emph{teacher} & Qwen3.5-9B, sin modo \emph{thinking} \\
+    Tareas & \texttt{train}: 4x4 (fácil, medio, difícil) y 6x6 (fácil, medio) \\
+    & 50 tareas por (tamaño, nivel): 250 tareas \\
+    Excluidas & 6x6 difícil y 9x9 \\
+    Muestras por tarea & $n = 8$ (2.000 muestras en la ronda r0) \\
+    Muestreo (r0) & temperatura 0,7, \texttt{top\_p} 0,8 \\
+    Límite de salida & 4.096 tokens \\
+    \emph{Few-shot} & 2 ejemplos, formato \texttt{steps} (\texttt{Step k: rXcY = v} + rejilla) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Qué se excluyó y por qué.} La partición de entrenamiento contiene 450
+tareas (50 por tamaño y nivel, incluidos 6x6 difícil y 9x9). Se usó solo el
+subconjunto que el 9B puede resolver con un presupuesto de 4.096 tokens;
+6x6 difícil y 9x9 quedaron fuera. Todas las tareas tienen solución única
+demostrada y se resuelven por casillas con un único candidato, de modo que el
+\emph{reward} del verificador es exacto.
+
+\paragraph{Decisión de usar \emph{few-shot}.} Un piloto de 5 tareas por nivel
+con $n = 8$ comparó 0 y 2 \emph{shots}. Con 2 \emph{shots} las respuestas son más
+cortas y truncan menos (6x6 medio: 40\,\% frente a 52\,\% de truncadas, y
+\texttt{pass@8} de 1,00 frente a 0,60), y siguen un formato uniforme
+(\texttt{Step k: rXcY = v}, rejilla y \texttt{<answer>}) que un modelo de 2B puede
+aprender. Cada celda del piloto tiene solo 5 tareas (40 muestras), por lo que el
+resultado es indicativo. Los \emph{shots} se usan solo para generar: el
+\emph{prompt} guardado en los datos de entrenamiento es el \emph{prompt} base de
+\texttt{train.jsonl}, sin ejemplos, que es el que el 2B recibe en la evaluación.
+Así el 2B aprende el estilo de los ejemplos sin necesitarlos en contexto.
+
+\paragraph{Ejecución.} Cada ronda se repartió en 5 \emph{shards} (un trabajo de
+Slurm por \emph{shard}, una GPU L40S cada uno), y todos reciben las mismas 10
+tareas por (tamaño, nivel). La corrida r0 tardó entre 1 h 48 min y 1 h 57 min por
+\emph{shard}. Una segunda ronda (r1) con temperatura 1,0 y otra semilla se ejecutó
+solo sobre las 100 tareas de 6x6 (800 muestras, 1 h 5 min a 1 h 15 min por
+\emph{shard}) para conseguir más rechazados con rejilla errónea.
+
+\subsection{Resultados de la generación}
+\label{sec:traces-resultados}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Ronda r0: 250 tareas, 2.000 muestras, Qwen3.5-9B con 2 \emph{shots} y
+  límite de 4.096 tokens.}
+  \label{tab:traces-r0}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    Tablero / nivel & \passuno & \texttt{pass@8} & Truncadas & Tokens medios \\
+    \midrule
+    4x4 fácil  & 0,99 & 1,00 &  0\,\% &  771 \\
+    4x4 medio  & 0,98 & 1,00 &  1\,\% & 1.113 \\
+    4x4 difícil& 0,96 & 1,00 &  4\,\% & 1.772 \\
+    6x6 fácil  & 0,87 & 1,00 & 10\,\% & 2.127 \\
+    6x6 medio  & 0,64 & 0,96 & 34\,\% & 3.053 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+De las 2.000 muestras, 1.775 son correctas (\emph{reward} 1,0), y 248 de las 250
+tareas tienen al menos una; las dos sin ninguna son de 6x6 medio. Los fallos son
+sobre todo truncamientos: de 225 muestras fallidas, 194 (86\,\%) se cortaron en
+4.096 tokens y solo 31 son rejillas erróneas o formato roto. Por eso, los
+rechazados reales de DPO enseñan sobre todo a ser más breve. Además, las trazas
+correctas se concentran en lo fácil (cerca de 1.170 son 4x4 y 600 son 6x6). La
+ronda r1 (temperatura 1,0) no cambió las tasas de aprobación ni de truncamiento
+(6x6 fácil 0,91 y 9\,\% truncadas; 6x6 medio 0,63 y 36\,\%) y aportó solo 6
+rechazados con rejilla errónea, por lo que no se hicieron más rondas con el 9B.
+
+\subsection{Construcción de los conjuntos SFT y DPO}
+\label{sec:traces-datasets}
+
+El script \texttt{build\_sft\_dpo.py} lee los \emph{shards} de r0 y r1, recupera el
+\emph{prompt} sin \emph{shots} de \texttt{train.jsonl} por \texttt{task\_id} y
+rechaza muestras que no sean de la partición \texttt{train}.
+
+\paragraph{SFT.} Cada ejemplo es un par (\texttt{prompt}, \texttt{completion}).
+Se incluyen las muestras con \emph{reward} 1,0 y sin truncar, hasta 2
+\emph{completions} distintas por tarea, las más cortas primero. El resultado son
+498 ejemplos: 100 por nivel, salvo 98 en 6x6 medio (cubre 250 tareas distintas
+menos las dos sin muestras correctas).
+
+\paragraph{DPO.} Cada ejemplo tiene \texttt{prompt}, \texttt{chosen},
+\texttt{rejected} y los indicadores \texttt{rejected\_truncated} y
+\texttt{rejected\_synthetic}. El \texttt{chosen} es la correcta más corta, y hasta
+2 pares por tarea sin repetir \emph{completions}. El \texttt{rejected} real
+prefiere rejillas erróneas que terminaron (la más cercana a la correcta primero) y
+solo después las truncadas.
+
+\paragraph{Pares sintéticos.} Como el 9B casi no produce rejillas erróneas, se
+añadió un par sintético por tarea: el \texttt{rejected} es la propia traza correcta
+con una celda originalmente vacía cambiada en la rejilla del \texttt{<answer>}
+final. Cada uno se comprueba con el \emph{reward} (formato correcto y no
+resuelto) y la semilla depende de \texttt{task\_id}, así que el resultado es
+determinista. Son rechazados fuera de política: el razonamiento previo queda
+intacto y solo la rejilla final es incorrecta, de modo que el par enseña sobre todo
+a copiar fielmente la última rejilla verificada. Los indicadores permiten
+filtrarlos o ponderarlos.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Pares DPO por nivel (432 en total).}
+  \label{tab:traces-dpo}
+  \begin{tabular}{@{}lcccccc@{}}
+    \toprule
+    Origen & 4x4 fácil & 4x4 medio & 4x4 difícil & 6x6 fácil & 6x6 medio & Total \\
+    \midrule
+    Reales      &  3 &  6 & 16 & 65 & 92 & 182 \\
+    Sintéticos  & 50 & 50 & 50 & 50 & 50 & 250 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+De los 182 pares reales, 36 tienen un rechazado con rejilla errónea y 146 uno
+truncado. Solo con r0 y sin sintéticos habría 148 pares reales (30 con rejilla
+errónea).
+
+\subsection{Limitaciones}
+\label{sec:traces-limitaciones}
+Los datos están sesgados a lo fácil y el 86\,\% de los fallos del 9B son
+truncamientos, no errores de razonamiento. Los pares sintéticos no son
+\emph{on-policy}. Un paso opcional es muestrear el 2B tras el SFT y emparejar sus
+fallos con las trazas correctas del 9B. Además, ningún \emph{prompt} de
+\texttt{train.jsonl} debería aparecer en \texttt{eval.jsonl} ni en
+\texttt{test.jsonl}: las semillas impiden compartir puzzles, pero esto debe
+verificarse. Las cifras de esta sección provienen de los registros de la
+generación y no de las evaluaciones de las secciones anteriores, que usan la
+partición de prueba.
