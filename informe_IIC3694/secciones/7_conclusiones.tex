@@ -1,10 +1,44 @@
 \section{Conclusiones y limitaciones}
 \label{sec:conclusiones}
 
-\pendiente{sintetizar las diferencias principales entre modelos,
-el estado de la robustez del verificador y la calibración del entorno
-para el modelo objetivo. Vincular cada conclusión con la evidencia.}
+\paragraph{Diferencias entre modelos.}
+En la partición de prueba de 4x4 y 6x6, el 9B supera al 2B en casi todas las
+celdas, y la ventaja se concentra donde el 2B empieza a fallar: en 4x4 con 12
+casillas, \passuno\ de 68,0\,\% frente a 14,0\,\% sin ejemplos, y en 6x6 con 8
+casillas, de 86,0\,\% frente a 21,0\,\% (sección~\ref{sec:prueba}). Promediando
+los seis niveles, \passuno\ es 31,0\,\% para el 2B y 59,7\,\% para el 9B sin
+ejemplos.
 
-\pendiente{declarar las limitaciones del muestreo, los modelos y
-dificultades cubiertos, y los cambios prioritarios antes de utilizar
-el entorno en el proyecto de entrenamiento posterior.}
+\paragraph{Efecto de los ejemplos y del límite de tokens.}
+Dos \emph{shots} mejoran el 2B (de 31,0\,\% a 39,5\,\% de \passuno\ promedio) y
+reducen los tokens generados en los niveles fáciles, pero no abren los niveles sin
+aciertos. El fallo dominante en toda la evaluación es el truncamiento: el 50,1\,\%
+de las 7.680 respuestas alcanzó el límite de 2.304 tokens, y casi todas las
+respuestas de 6x6 con 16 o 24 casillas (sección~\ref{sec:cualitativo}). Parte de
+los fallos refleja el presupuesto de tokens y no la capacidad.
+
+\paragraph{Robustez del verificador.}
+El verificador acepta cualquier solución válida que conserve las pistas y
+rechaza los casos probados, y los 7.680 \emph{rewards} registrados coinciden con
+los recalculados (sección~\ref{sec:robustez}). Las reglas del parser sobre el
+razonamiento delimitado no tienen pruebas propias.
+
+\paragraph{Calibración del entorno.}
+Para el 2B, la zona con señal de aprendizaje son 4x4 con 8 y 12 casillas y 6x6 con
+8 casillas, donde casi todas las tareas tienen resultados mixtos; 4x4 con 4
+casillas está casi saturado con ejemplos, y 6x6 con 16 y 24 casillas no tiene
+aciertos para el 2B sin ejemplos (sección~\ref{sec:calibracion}).
+
+\paragraph{Limitaciones.}
+Se usó un solo \emph{seed}, sin intervalos de confianza, con 20 tareas por nivel.
+Los tableros de 9x9 de la partición de prueba no se evaluaron, y la partición de
+validación solo se usó en pilotos del 9B con muy pocas tareas, por lo que no hay
+una línea base sobre ella. El límite de 2.304 tokens trunca la mayoría de las
+respuestas en los niveles difíciles. No se generaron \emph{traces} de
+entrenamiento.
+
+\paragraph{Cambios prioritarios antes del entrenamiento.}
+Evaluar el 2B con un límite de tokens mayor en 6x6 para separar el truncamiento
+del error de razonamiento, ejecutar los tableros de 9x9 de la prueba, repetir con
+más \emph{seeds} y, solo después, generar las \emph{traces} del \emph{teacher} sobre
+la partición de entrenamiento.

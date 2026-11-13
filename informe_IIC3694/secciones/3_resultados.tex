@@ -1,105 +1,182 @@
-\section{Resultados de la línea base}
+\section{Resultados}
 \label{sec:resultados}
 
-La tabla~\ref{tab:global} resume ambos modelos sobre las mismas 90 tareas
-de validación, y la tabla~\ref{tab:lineabase} desglosa los resultados por
-tamaño de tablero y nivel. Cada grupo contiene $N = 10$ tareas con
-$n = 8$ respuestas por tarea.
+Esta sección reporta los resultados en el orden en que se obtuvieron: primero
+tres pilotos pequeños del 9B sobre la partición de validación, que fijaron el
+protocolo, y luego la evaluación de ambos modelos sobre la partición de prueba
+de 4x4 y 6x6, que es la medición principal. No se evaluó la partición de
+validación completa con ningún modelo, por lo que no hay una línea base sobre
+ella.
+
+\subsection{Pilotos sobre la partición de validación}
+\label{sec:pilotos}
+Los pilotos usaron solo Qwen3.5-9B y pocas tareas de la partición de validación,
+por lo que sus cifras son orientativas y no sustentan comparaciones finas.
+\begin{description}[leftmargin=0pt]
+  \item[Piloto 1] (2 tareas por tamaño y nivel, $n = 4$; 18 tareas): sin
+  \emph{thinking} y con 0 \emph{shots} (límite de 2.048 tokens), sin \emph{thinking}
+  y con 2 \emph{shots} (2.048), y con \emph{thinking} (8.192, temperatura 0{,}6
+  y \emph{top-p} 0{,}95).
+  \item[Piloto 2] (1 tarea por nivel en 6x6 y 9x9, $n = 16$; 6 tareas): sin
+  \emph{thinking}, con 0 y 2 \emph{shots}, con un límite de 8.192 tokens.
+  \item[Piloto 3] (las mismas 6 tareas, $n = 16$): 2 \emph{shots} en dos
+  formatos de respuesta más cortos (\texttt{compact} y \texttt{seen}), para ver
+  si acortaban las respuestas.
+\end{description}
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Resultados globales sobre las 90 tareas de validación
-  (promedio macro, en porcentaje).}
-  \label{tab:global}
-  \begin{tabularx}{\linewidth}{@{}Yccccccc@{}}
+  \caption{Pilotos del 9B en validación, \passuno\ (\%) y porcentaje de
+  respuestas truncadas entre paréntesis. $S$: \emph{shots}. Piloto 1:
+  límite de 2.048 tokens (8.192 con \emph{thinking}), 2 tareas por celda;
+  pilotos 2 y 3: 8.192 tokens, 1 tarea por celda.}
+  \label{tab:pilotos}
+  \begin{tabular}{@{}lrrrrrr@{}}
     \toprule
-    Modelo & \passuno & \texttt{pass@2} & \texttt{pass@4} & \texttt{pass@8}
-      & Correctas & Tareas resueltas & Truncadas \\
+    Configuración & 4x4 easy & 4x4 hard & 6x6 easy & 6x6 hard & 9x9 easy
+      & 9x9 hard \\
     \midrule
-    Qwen3.5-2B & 6,9 & 9,3 & 12,3 & 15,6 & 50/720 & 14/90 & 0,7 \\
-    Qwen3.5-9B 4 bits & 17,2 & 24,3 & 32,7 & 40,0 & 124/720 & 36/90 & 37,2 \\
+    P1, sin \emph{thinking}, $S=0$ & 100 (0) & 100 (0) & 25 (75) & 0 (100) & 0 (100) & 0 (100) \\
+    P1, sin \emph{thinking}, $S=2$ & 100 (0) & 88 (12) & 62 (38) & 0 (100) & 12 (88) & 0 (100) \\
+    P1, con \emph{thinking}, $S=0$ & 0 (62) & 0 (88) & 0 (88) & 0 (100) & 0 (100) & 0 (100) \\
+    \midrule
+    P2, $S=0$ & --- & --- & 100 (0) & 88 (12) & 100 (0) & 0 (100) \\
+    P2, $S=2$ \texttt{steps} & --- & --- & 100 (0) & 94 (6) & 100 (0) & 0 (100) \\
+    P3, $S=2$ \texttt{compact} & --- & --- & 100 (0) & 88 (12) & 100 (0) & 0 (100) \\
+    P3, $S=2$ \texttt{seen} & --- & --- & 100 (0) & 81 (19) & 100 (0) & 0 (100) \\
     \bottomrule
-  \end{tabularx}
+  \end{tabular}
 \end{table}
+
+Del piloto 1 se concluyó que el modo \emph{thinking} no es viable con el límite
+probado: ninguna de sus respuestas fue correcta y entre el 62\,\% y el 100\,\% se
+truncó, con promedios de 7.152 a 8.192 tokens. Sin \emph{thinking} y con límite
+de 2.048 tokens, el 9B resuelve 4x4 y casi nada en 6x6 y 9x9, porque trunca;
+dos ejemplos ayudan en 6x6 \emph{easy} (de 25\,\% a 62\,\%). Con 8.192 tokens
+(piloto 2) el 9B resuelve casi todas las tareas de 6x6 y 9x9 \emph{easy} y
+\emph{medium}, pero necesita hasta 6.219 tokens en promedio en 6x6 \emph{hard} y
+trunca el 100\,\% en 9x9 \emph{hard}. En el piloto 3 los formatos más cortos no
+mejoraron \passuno\ ni bajaron de forma consistente los tokens generados
+(por ejemplo, 9x9 \emph{medium}: 5.955 con \texttt{steps}, 6.230 con
+\texttt{compact} y 5.916 con \texttt{seen}), y con una tarea por celda las
+diferencias no son interpretables. Se mantuvo el formato \texttt{steps}. Por
+último, con respuestas largas la generación es costosa: el límite de tokens de la
+evaluación final se fijó por separado (sección~\ref{sec:protocolo}).
+
+\subsection{Evaluación en la partición de prueba}
+\label{sec:prueba}
+Se ejecutó una vez la partición de prueba de 4x4 y 6x6 con ambos modelos y dos
+configuraciones de prompt. Sus resultados no se usaron para ajustar el
+protocolo ni las tareas. La prueba usa una grilla fija de casillas vacías por
+tamaño en lugar de los niveles \emph{easy}, \emph{medium} y \emph{hard}
+(tabla~\ref{tab:niveles_prueba}); cada nivel \texttt{n$k$} tiene 20 tareas con
+solución única. Los niveles 4x4 y 6x6 con $k \le 16$ son resolubles completando
+casillas con un único candidato; en 6x6 con 24 casillas lo son 15 de 20 tareas.
+El diseño es el de la sección~\ref{sec:protocolo}: 2 modelos $\times$ 2
+configuraciones de \emph{shots} $\times$ 6 niveles $\times$ 20 tareas $\times$ 16
+respuestas $= 7.680$ respuestas, sin \emph{thinking} y con un límite de 2.304
+tokens. Los tableros de 9x9 de la prueba no se evaluaron: la corrida correspondiente
+(límite de 8.192 tokens) está preparada, pero no se ejecutó.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Resultados por modelo, tamaño de tablero y nivel (en
-  porcentaje). $N = 10$ tareas y $n = 8$ respuestas por grupo.
-  \emph{Trunc.}: respuestas que alcanzaron el límite de 1.024 tokens.}
-  \label{tab:lineabase}
-  \begin{tabularx}{\linewidth}{@{}Yllccccc@{}}
+  \caption{Partición de prueba, sin \emph{thinking}, 20 tareas y $n = 16$
+  respuestas por nivel (en porcentaje). \emph{Vacías}: casillas vacías.
+  \emph{Trunc.}: respuestas que alcanzaron el límite de 2.304 tokens.
+  \emph{Tokens}: promedio de tokens generados.}
+  \label{tab:prueba}
+  \begin{tabular}{@{}llcrrrrrrrr@{}}
     \toprule
-    Modelo & Tablero & Nivel & \passuno & \texttt{pass@2} & \texttt{pass@4}
-      & \texttt{pass@8} & Trunc. \\
+    Modelo & Shots & Tablero & Vacías & \passuno & \texttt{pass@2}
+      & \texttt{pass@4} & \texttt{pass@8} & \texttt{pass@16} & Trunc.
+      & Tokens \\
     \midrule
-    Qwen3.5-2B & 4x4 & easy   & 23,8 & 32,5 & 42,1 & 50,0 & 1,3 \\
-               & 4x4 & medium & 30,0 & 34,6 & 37,9 & 40,0 & 1,3 \\
-               & 4x4 & hard   &  2,5 &  4,6 &  7,9 & 10,0 & 1,3 \\
-               & 6x6 & easy   &  5,0 &  9,6 & 17,9 & 30,0 & 1,3 \\
-               & 6x6 & medium &  1,3 &  2,5 &  5,0 & 10,0 & 1,3 \\
-               & 6x6 & hard   &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
-               & 9x9 & easy   &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
-               & 9x9 & medium &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
-               & 9x9 & hard   &  0,0 &  0,0 &  0,0 &  0,0 & 0,0 \\
+    Qwen3.5-2B & 0 & 4x4 & 4 & 88,0 & 98,0 & 100,0 & 100,0 & 100,0 & 2 & 1131 \\
+     &  & 4x4 & 8 & 63,0 & 86,0 & 98,0 & 100,0 & 100,0 & 22 & 1728 \\
+     &  & 4x4 & 12 & 14,0 & 26,0 & 43,0 & 67,0 & 90,0 & 84 & 2263 \\
+     &  & 6x6 & 8 & 21,0 & 37,0 & 59,0 & 79,0 & 90,0 & 78 & 2233 \\
+     &  & 6x6 & 16 & 0,0 & 0,0 & 0,0 & 0,0 & 0,0 & 100 & 2304 \\
+     &  & 6x6 & 24 & 0,0 & 0,0 & 0,0 & 0,0 & 0,0 & 100 & 2304 \\
     \midrule
-    Qwen3.5-9B & 4x4 & easy   & 68,8 & 83,9 & 95,6 & 100,0 &  5,0 \\
-    4 bits     & 4x4 & medium & 40,0 & 55,4 & 76,3 & 100,0 & 12,5 \\
-               & 4x4 & hard   & 12,5 & 22,5 & 36,4 &  50,0 & 35,0 \\
-               & 6x6 & easy   & 18,8 & 29,6 & 41,4 &  50,0 & 25,0 \\
-               & 6x6 & medium &  5,0 &  8,9 & 14,3 &  20,0 & 45,0 \\
-               & 6x6 & hard   &  0,0 &  0,0 &  0,0 &   0,0 & 67,5 \\
-               & 9x9 & easy   &  8,8 & 15,7 & 25,0 &  30,0 & 21,3 \\
-               & 9x9 & medium &  1,3 &  2,5 &  5,0 &  10,0 & 43,8 \\
-               & 9x9 & hard   &  0,0 &  0,0 &  0,0 &   0,0 & 80,0 \\
+    Qwen3.5-2B & 2 & 4x4 & 4 & 95,0 & 100,0 & 100,0 & 100,0 & 100,0 & 3 & 824 \\
+     &  & 4x4 & 8 & 77,0 & 95,0 & 100,0 & 100,0 & 100,0 & 15 & 1368 \\
+     &  & 4x4 & 12 & 22,0 & 38,0 & 58,0 & 78,0 & 95,0 & 76 & 2207 \\
+     &  & 6x6 & 8 & 41,0 & 64,0 & 85,0 & 97,0 & 100,0 & 60 & 2053 \\
+     &  & 6x6 & 16 & 2,0 & 4,0 & 7,0 & 11,0 & 15,0 & 98 & 2296 \\
+     &  & 6x6 & 24 & 0,0 & 0,0 & 0,0 & 0,0 & 0,0 & 100 & 2304 \\
+    \midrule
+    Qwen3.5-9B & 0 & 4x4 & 4 & 100,0 & 100,0 & 100,0 & 100,0 & 100,0 & 0 & 1207 \\
+     &  & 4x4 & 8 & 100,0 & 100,0 & 100,0 & 100,0 & 100,0 & 0 & 1471 \\
+     &  & 4x4 & 12 & 68,0 & 83,0 & 94,0 & 99,0 & 100,0 & 33 & 2045 \\
+     &  & 6x6 & 8 & 86,0 & 96,0 & 100,0 & 100,0 & 100,0 & 14 & 1981 \\
+     &  & 6x6 & 16 & 4,0 & 7,0 & 13,0 & 23,0 & 35,0 & 97 & 2302 \\
+     &  & 6x6 & 24 & 0,0 & 0,0 & 0,0 & 0,0 & 0,0 & 100 & 2304 \\
+    \midrule
+    Qwen3.5-9B & 2 & 4x4 & 4 & 99,0 & 100,0 & 100,0 & 100,0 & 100,0 & 0 & 660 \\
+     &  & 4x4 & 8 & 96,0 & 99,0 & 100,0 & 100,0 & 100,0 & 3 & 1100 \\
+     &  & 4x4 & 12 & 72,0 & 91,0 & 99,0 & 100,0 & 100,0 & 28 & 1925 \\
+     &  & 6x6 & 8 & 82,0 & 96,0 & 100,0 & 100,0 & 100,0 & 13 & 1500 \\
+     &  & 6x6 & 16 & 21,0 & 35,0 & 54,0 & 74,0 & 90,0 & 79 & 2245 \\
+     &  & 6x6 & 24 & 0,0 & 0,0 & 0,0 & 0,0 & 0,0 & 100 & 2304 \\
     \bottomrule
-  \end{tabularx}
+  \end{tabular}
 \end{table}
+
+\paragraph{Efecto del tamaño y de las casillas vacías.}
+El desempeño cae con la cantidad de casillas por completar en ambos modelos.
+En 4x4, el 9B resuelve el 100\,\% con 4 y 8 casillas y baja a 68--72\,\% de
+\passuno\ con 12; el 2B pasa de 88\,\% a 63\,\% y a 14\,\% (sin ejemplos). En
+6x6, ningún modelo resuelve una tarea con 24 casillas en ninguno de los 16
+intentos, y con 16 casillas solo el 9B con ejemplos obtiene resultados
+apreciables (\passuno\ de 21,0\,\%).
 
 \paragraph{Comparación entre modelos.}
-El modelo de 9B supera al objetivo en todas las métricas globales:
-\passuno\ de 17,2\,\% frente a 6,9\,\% y \texttt{pass@8} de 40,0\,\%
-frente a 15,6\,\%. También resuelve al menos una vez más del doble de
-tareas (36 frente a 14 de 90). El 9B obtiene valores iguales o
-superiores en todos los grupos y métricas; la brecha es menor en 4x4
-\emph{medium} (\passuno\ de 30,0\,\% frente a 40,0\,\%) y en 6x6
-\emph{medium} (\texttt{pass@8} de 10,0\,\% frente a 20,0\,\%).
+Con precisión de pesos idéntica, el 9B supera al 2B en casi todas las
+celdas. La brecha es mayor donde el 2B empieza a fallar: en 4x4 con 12
+casillas, \passuno\ de 68,0\,\% frente a 14,0\,\% sin ejemplos, y en 6x6 con
+8 casillas, 86,0\,\% frente a 21,0\,\%. La excepción es 4x4 con 4 casillas
+con ejemplos, donde ambos están cerca del techo (95,0\,\% y 99,0\,\%).
 
-\paragraph{Efecto del tamaño y del nivel.}
-El tamaño del tablero es el factor dominante. El 2B solo acierta en 4x4 y
-en 6x6 \emph{easy} y \emph{medium}; no obtiene ningún acierto en 6x6
-\emph{hard} ni en ningún nivel de 9x9. El 9B extiende los aciertos a
-9x9 \emph{easy} y \emph{medium}, pero tampoco resuelve 6x6 \emph{hard} ni
-9x9 \emph{hard}. Dentro de cada tamaño, el desempeño disminuye en general
-al aumentar el nivel; la excepción es el 2B en 4x4, donde \emph{medium}
-supera a \emph{easy} en \passuno\ (30,0\,\% frente a 23,8\,\%). Con 10
-tareas por grupo, esta inversión puede deberse a la variabilidad de la
-muestra.
+\paragraph{Efecto de los \emph{shots}.}
+Dos ejemplos mejoran el 2B en todos los niveles donde tiene aciertos
+(4x4 con 12 casillas, de 14,0\,\% a 22,0\,\% en \passuno; 6x6 con 8
+casillas, de 21,0\,\% a 41,0\,\%) y reducen los tokens generados en los
+niveles fáciles (4x4 con 4 casillas: de 1.131 a 824 en el 2B y de 1.207 a
+660 en el 9B). El mayor efecto está en el 9B en 6x6 con 16 casillas, donde
+\passuno\ pasa de 4,0\,\% a 21,0\,\% y \texttt{pass@16} de 35,0\,\% a
+90,0\,\%. En el 9B, en cambio, los niveles ya saturados no mejoran y en 6x6
+con 8 casillas \passuno\ baja levemente (86,0\,\% a 82,0\,\%), una
+diferencia que con 20 tareas no puede distinguirse de la variabilidad.
 
-\paragraph{Efecto de aumentar los intentos.}
-Pasar de $k = 1$ a $k = 8$ multiplica el valor global por 2,2 en el 2B
-y por 2,3 en el 9B. El aumento indica que, en varias tareas, los
-modelos aciertan en algunos intentos y fallan en otros: por ejemplo, el
-2B en 6x6 \emph{easy} pasa de 5,0\,\% a 30,0\,\%. En cambio, en 4x4
-\emph{medium} el 2B casi no mejora con más intentos (30,0\,\% a
-40,0\,\%), lo que sugiere que acierta de forma consistente en pocas
-tareas y falla de forma consistente en las demás.
+\paragraph{Truncamiento.}
+El límite de 2.304 tokens condiciona los resultados difíciles. En los niveles
+con más casillas vacías la mayoría de las respuestas lo alcanza: el 2B
+trunca el 84\,\% de sus respuestas en 4x4 con 12 casillas y el 100\,\% en
+6x6 con 16 y 24 casillas, y el 9B el 97\,\% (sin ejemplos) en 6x6 con 16.
+Una respuesta truncada no cierra el bloque \texttt{<answer>} y recibe 0, de
+modo que parte de los fallos en estos niveles refleja el presupuesto de
+tokens y no la incapacidad de resolver el puzzle. Los ejemplos reducen el
+truncamiento del 9B en 6x6 con 16 casillas (de 97\,\% a 79\,\%).
 
-\paragraph{Respuestas truncadas.}
-Los modelos fallan de forma distinta. El 2B casi nunca alcanza el límite
-de tokens (0,7\,\% de sus respuestas) y en 9x9 entrega siempre un tablero
-con el formato requerido, pero incorrecto; sus errores se deben al
-contenido del tablero y no al presupuesto de tokens. El 9B, en cambio,
-alcanza el límite en el 37,2\,\% de sus respuestas, y esta proporción
-crece con la dificultad hasta el 80,0\,\% en 9x9 \emph{hard}. Sin
-embargo, el límite no oculta respuestas correctas: en 242 de esas 268
-respuestas, el modelo ya había cerrado un bloque de respuesta sin una
-solución válida y siguió escribiendo para corregirse
-(sección~\ref{sec:cualitativo}).
+\paragraph{Aprendibilidad y \texttt{pass@k}.}
+Los niveles con \texttt{pass@1} bajo y \texttt{pass@16} alto son los que
+dan señal a un entrenamiento por refuerzo: 4x4 con 12 casillas (2B: 14,0\,\%
+a 90,0\,\% sin ejemplos y 22,0\,\% a 95,0\,\% con ejemplos), 6x6 con 8
+casillas en el 2B (21,0\,\% a 90,0\,\%) y 6x6 con 16 casillas en el 9B con
+ejemplos (21,0\,\% a 90,0\,\%). En cambio, 4x4 con 4 casillas está saturado en
+ambos modelos y 6x6 con 24 casillas no tiene aciertos en ninguna
+configuración. Para el modelo objetivo, la zona aprendible de la partición
+de prueba es 4x4 con 8 y 12 casillas y 6x6 con 8 casillas.
 
-\paragraph{Incertidumbre.}
-Cada grupo contiene solo 10 tareas, por lo que una tarea representa
-10 puntos porcentuales de \texttt{pass@8}. Las diferencias pequeñas entre
-grupos, como la inversión entre \emph{easy} y \emph{medium} del 2B en
-4x4, no deben interpretarse como diferencias de dificultad establecidas.
-Se usó una sola semilla base y no se calcularon intervalos de confianza.
+\paragraph{Resumen global.}
+Promediando los seis niveles, \passuno\ del 2B sube de 31,0\,\% con 0
+\emph{shots} a 39,5\,\% con 2, y el del 9B de 59,7\,\% a 61,7\,\%.
+
+\paragraph{Limitaciones.}
+Cada nivel tiene 20 tareas, por lo que cada tarea equivale a 5 puntos
+porcentuales de \texttt{pass@16}. Se usó un solo \emph{seed} y no se calcularon
+intervalos de confianza. Solo se evaluaron 4x4 y 6x6; los tableros de 9x9 no
+se midieron con ningún modelo en la prueba, y en validación solo hay los
+pilotos del 9B. El límite de 2.304 tokens trunca la mayoría de las respuestas en
+los niveles difíciles, por lo que parte de los fallos refleja el presupuesto
+de tokens y no la incapacidad de resolver el puzzle.
