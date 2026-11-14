@@ -6,8 +6,10 @@ Para el entrenamiento posterior del modelo objetivo (Qwen3.5-2B), con SFT
 \emph{traces} con Qwen3.5-9B como \emph{teacher} sobre la partición de
 entrenamiento. Esta sección describe cómo se generaron y qué datos resultaron;
 el entrenamiento mismo no se ha ejecutado. Los datos se publican con el
-repositorio en \texttt{data/sudoku/} (particiones \texttt{train}, \texttt{eval} y
-\texttt{test}) y \texttt{data/traces/} (\texttt{sft.jsonl} y \texttt{dpo.jsonl}).
+repositorio en el archivo \texttt{sudoku\_data\_traces.zip}, que contiene las
+particiones \texttt{train}, \texttt{eval} y \texttt{test} (carpeta
+\texttt{sudoku/}) y los conjuntos \texttt{sft.jsonl} y \texttt{dpo.jsonl}
+(carpeta \texttt{traces/}).
 
 \subsection{Configuración de la generación}
 \label{sec:traces-config}
