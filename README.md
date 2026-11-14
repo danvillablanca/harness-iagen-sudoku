@@ -193,7 +193,3 @@ pass@k (estimador insesgado de Chen et al., 2021: `1 - C(n-c, k) / C(n, k)`,
 promediado sobre tareas), el porcentaje de respuestas cortadas por el límite de
 tokens y los tokens promedio. pass@k solo se calcula para tareas con al menos
 `k` muestras.
-
-## Pendientes
-
-Ver [TODO.md](TODO.md).
