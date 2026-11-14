@@ -1,0 +1,13 @@
+\section{Repositorio del código}
+\label{sec:repositorio}
+
+El código del harness está disponible en el repositorio público
+\url{https://github.com/juanmoyalagos/harness-ia-sudoku}, que reúne solo el
+harness, sin este informe ni los documentos del curso. Incluye el generador de
+tareas, el parser y el verificador con la interfaz
+\texttt{reward(prompt, completion) -> float}, el script de evaluación con
+\passk, la construcción de los conjuntos SFT y DPO y las pruebas unitarias de la
+sección~\ref{sec:robustez}. También contiene el archivo
+\texttt{sudoku\_data\_traces.zip}, con las particiones del dataset y las
+\emph{traces} de la sección~\ref{sec:traces}. Las instrucciones de instalación y
+uso están en su \texttt{README.md}.
